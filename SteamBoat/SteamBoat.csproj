@@ -20,4 +20,10 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\ContentGrabber\ContentGrabber.DataAccess\ContentGrabber.DataAccess.csproj" />
+    <ProjectReference Include="..\..\ContentGrabber\ContentGrabber.Grabber\ContentGrabber.Grabber.csproj" />
+    <ProjectReference Include="..\..\ContentGrabber\ContentGrabber.Utils\ContentGrabber.Utils.csproj" />
+  </ItemGroup>
+
 </Project>

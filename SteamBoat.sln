@@ -5,6 +5,14 @@ VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamBoat", "SteamBoat\SteamBoat.csproj", "{247815D0-1B94-49D8-B947-67550A67CF24}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentGrabber.DataAccess", "..\ContentGrabber\ContentGrabber.DataAccess\ContentGrabber.DataAccess.csproj", "{9E2460AA-19EA-4953-8127-BFBF8C46D337}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentGrabber.Grabber", "..\ContentGrabber\ContentGrabber.Grabber\ContentGrabber.Grabber.csproj", "{356D8DBC-35E4-46EB-B567-26410981637A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentGrabber.Models", "..\ContentGrabber\ContentGrabber.Models\ContentGrabber.Models.csproj", "{11EAA3D3-DD34-4889-BE64-D33D9398F802}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentGrabber.Utils", "..\ContentGrabber\ContentGrabber.Utils\ContentGrabber.Utils.csproj", "{0A2C1764-FC53-4E04-A948-A9D4CECFC441}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +23,22 @@ Global
 		{247815D0-1B94-49D8-B947-67550A67CF24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{247815D0-1B94-49D8-B947-67550A67CF24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{247815D0-1B94-49D8-B947-67550A67CF24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E2460AA-19EA-4953-8127-BFBF8C46D337}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E2460AA-19EA-4953-8127-BFBF8C46D337}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E2460AA-19EA-4953-8127-BFBF8C46D337}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E2460AA-19EA-4953-8127-BFBF8C46D337}.Release|Any CPU.Build.0 = Release|Any CPU
+		{356D8DBC-35E4-46EB-B567-26410981637A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{356D8DBC-35E4-46EB-B567-26410981637A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{356D8DBC-35E4-46EB-B567-26410981637A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{356D8DBC-35E4-46EB-B567-26410981637A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11EAA3D3-DD34-4889-BE64-D33D9398F802}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11EAA3D3-DD34-4889-BE64-D33D9398F802}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11EAA3D3-DD34-4889-BE64-D33D9398F802}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11EAA3D3-DD34-4889-BE64-D33D9398F802}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A2C1764-FC53-4E04-A948-A9D4CECFC441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A2C1764-FC53-4E04-A948-A9D4CECFC441}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A2C1764-FC53-4E04-A948-A9D4CECFC441}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A2C1764-FC53-4E04-A948-A9D4CECFC441}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
