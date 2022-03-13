@@ -16,8 +16,8 @@ namespace SteamBoat.Models
 
         
 
-        public int TradesMin { get; set; }
-        public int TradesMax { get; set; }
+        public int ListingsMin { get; set; }
+        public int ListingsMax { get; set; }
 
         public int PriceMin { get; set; }
         public int PriceMax { get; set; }

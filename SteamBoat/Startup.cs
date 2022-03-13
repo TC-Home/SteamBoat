@@ -17,6 +17,8 @@ using ContentGrabber.DataAccess.Interfaces;
 using ContentGrabber.Services;
 using ContentGrabber.DataAccess.Services;
 using ContentGrabber.Interfaces;
+using SteamBoat.Interfaces;
+using SteamBoat.Services;
 
 namespace SteamBoat
 {
@@ -41,6 +43,7 @@ namespace SteamBoat
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddScoped<IContentGrabberDataService, ContentGrabberDataService>();
             services.AddScoped<IContentGrabberService, ContentGrabberService>();
+            services.AddScoped<ISteamBoatService, SteamBoatService>();
             services.AddControllersWithViews();
 
             services.AddDbContext<SteamBoatContext>(options =>

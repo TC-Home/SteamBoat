@@ -9,7 +9,7 @@ using SteamBoat.Data;
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    [Migration("20220308212935_start")]
+    [Migration("20220313213050_start")]
     partial class start
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,12 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("ListingsMax")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ListingsMin")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -59,12 +65,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("PriceMin")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TradesMax")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TradesMin")
                         .HasColumnType("int");
 
                     b.HasKey("MissionId");

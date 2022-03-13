@@ -49,6 +49,12 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("ListingsMax")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ListingsMin")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -57,12 +63,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("PriceMin")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TradesMax")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TradesMin")
                         .HasColumnType("int");
 
                     b.HasKey("MissionId");

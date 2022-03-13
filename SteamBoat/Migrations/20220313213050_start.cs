@@ -13,8 +13,8 @@ namespace SteamBoat.Migrations
                     MissionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TradesMin = table.Column<int>(type: "int", nullable: false),
-                    TradesMax = table.Column<int>(type: "int", nullable: false),
+                    ListingsMin = table.Column<int>(type: "int", nullable: false),
+                    ListingsMax = table.Column<int>(type: "int", nullable: false),
                     PriceMin = table.Column<int>(type: "int", nullable: false),
                     PriceMax = table.Column<int>(type: "int", nullable: false)
                 },

@@ -54,7 +54,7 @@ namespace SteamBoat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MissionId,Name,TradesMin,TradesMax,PriceMin,PriceMax")] Mission mission)
+        public async Task<IActionResult> Create([Bind("MissionId,Name,ListingsMin,ListingsMax,PriceMin,PriceMax")] Mission mission)
         {
             if (ModelState.IsValid)
             {
@@ -86,7 +86,7 @@ namespace SteamBoat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MissionId,Name,TradesMin,TradesMax,PriceMin,PriceMax")] Mission mission)
+        public async Task<IActionResult> Edit(int id, [Bind("MissionId,Name,ListingsMin,ListingsMax,PriceMin,PriceMax")] Mission mission)
         {
             if (id != mission.MissionId)
             {
