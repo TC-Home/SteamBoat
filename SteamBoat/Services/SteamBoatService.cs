@@ -135,7 +135,7 @@ namespace SteamBoat.Services
                 var sell_price = item.SelectToken("sell_price").Value<string>();
                 var name = item.SelectToken("name").Value<string>();
                 var sell_price_text = item.SelectToken("sell_price_text").Value<string>();
-                Console.WriteLine(name + " " + sell_price_text + " (" + sell_listings + ")");
+               // Console.WriteLine(name + " " + sell_price_text + " (" + sell_listings + ")");
 
                 if (Int32.Parse(sell_listings) > Mission.ListingsMin) 
                 {
@@ -147,7 +147,8 @@ namespace SteamBoat.Services
                             if (Int32.Parse(sell_price) < Mission.PriceMax)
                             {
 
-                //                Console.WriteLine(name + " " + sell_price_text + " ("+ sell_listings + ")");
+                                Console.WriteLine("GRABBING : " + name + " " + sell_price_text + " ("+ sell_listings + ")");
+                                var itempage = _ContentGrabberService.GrabMe(Mission.ItemUrl + item.SelectToken("hash_name"));
 
                             }                        
                         }

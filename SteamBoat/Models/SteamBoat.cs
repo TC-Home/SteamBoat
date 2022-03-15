@@ -14,7 +14,7 @@ namespace SteamBoat.Models
         [MaxLength(255)]
         public string   Name { get; set; }
 
-        
+        public string ItemUrl { get; set; }
 
         public int ListingsMin { get; set; }
         public int ListingsMax { get; set; }

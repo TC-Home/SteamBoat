@@ -33,8 +33,6 @@ namespace SteamBoat.Controllers
 
             var res = _SteamBoatService.doMission(1, Freshness.Hour24);
 
-            //var res = _ContentGrabberService.GrabMeJSON("https://steamcommunity.com/market/search/render/?q=&start=0&count=500&category_753_Game%5B%5D=any&category_753_cardborder%5B%5D=tag_cardborder_1&category_753_item_class%5B%5D=tag_item_class_2&appid=753&sort_column=quantity&norender=1");
-
             return View();
         }
 
