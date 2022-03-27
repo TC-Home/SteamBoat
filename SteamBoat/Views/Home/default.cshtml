@@ -1,0 +1,31 @@
+﻿@model SteamBoat.Models.ViewModels.missionReportVM
+
+<style>
+body { background-color: #999999; }
+a { color: white; }
+#button1, #button2 { cursor: pointer; }
+</style>
+@foreach (var link in Model.urls)
+{
+ <p style="font-size: 16px;"><a href="@link" target="_blank">@link</a></p>   
+
+}
+<script>
+ 
+
+  document.getElementsByTagName('a').onclick = function() {
+ alert("hi");
+      this.style.color = 'green';
+ }
+    
+
+</script>
+
+
+ 
+     <style>
+         a:active, a:visited
+     {
+     color: green !important;
+     }
+     </style>

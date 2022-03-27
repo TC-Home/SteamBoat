@@ -14,6 +14,15 @@ namespace SteamBoat.Interfaces
         public missionReportVM doMission(int MissionId);
         public missionReportVM doMission(int MissionId, Freshness Freshness);
 
-        public missionReportVM GetItemsfromJSON(GrabResult GrabbedJSON, Mission Mission, missionReportVM MissionReport);
+        public missionReportVM GetItemsfromJSON(GrabResult GrabbedJSON, Mission Mission, missionReportVM MissionReport, Freshness Freshness);
+
+        public missionReportVM CreateUpdateItemPage(string hash_name, Mission Mission, missionReportVM MissionReport, int sellprice);
+
+        public string LHFandGaps(Freshness freshness);
+
+        public List<Item> GetLHFS(int lowest = 10);
+
+        public List<Item> GetGaps(int lowest = 10);
+
     }
 }

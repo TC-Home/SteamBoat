@@ -2,15 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220324174049_item")]
+    partial class item
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,18 +49,9 @@ namespace SteamBoat.Migrations
                     b.Property<string>("hash_name_key")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("Activity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Fruit")
-                        .HasColumnType("int");
-
                     b.Property<string>("Game")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("Gap")
-                        .HasColumnType("int");
 
                     b.Property<string>("ItemPageURL")
                         .HasColumnType("nvarchar(max)");
@@ -78,18 +71,6 @@ namespace SteamBoat.Migrations
 
                     b.Property<string>("item_nameid")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("max_buy_price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("min_sell_price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("next_min_sell_price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("orders")
-                        .HasColumnType("int");
 
                     b.HasKey("hash_name_key");
 

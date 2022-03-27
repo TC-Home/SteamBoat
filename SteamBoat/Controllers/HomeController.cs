@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SteamBoat.Interfaces;
 using SteamBoat.Models;
+using SteamBoat.Models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,11 +31,44 @@ namespace SteamBoat.Controllers
             _SteamBoatService = SteamBoatService;
         }
 
+        public IActionResult Domission(int id, bool grab=false) 
+        {
+            missionReportVM res = null;
+
+            if (grab)
+            {
+                res = _SteamBoatService.doMission(id, Freshness.Fresh);
+            } else
+            {
+                res = _SteamBoatService.doMission(id, Freshness.AnyCached);
+            }
+            return View("/views/home/default.cshtml", res);
+        }
+
+        public IActionResult LHF(bool grab = false)
+        {
+            if (grab)
+            {
+                string res = _SteamBoatService.LHFandGaps(Freshness.Fresh);
+            }
+            var myLHfs = _SteamBoatService.GetLHFS();
+            return View(myLHfs);
+        }
+
+        public IActionResult Gaps(bool grab = false)
+        {
+            if (grab)
+            {
+                string res = _SteamBoatService.LHFandGaps(Freshness.Fresh);
+            }
+            
+            var myGaps = _SteamBoatService.GetGaps();
+            return View(myGaps);
+        }
+
         public IActionResult Index()
         {
-
-            var res = _SteamBoatService.doMission(1, Freshness.Hour24);
-
+            
             return View();
         }
 
@@ -136,6 +170,15 @@ namespace SteamBoat.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+
+        public IActionResult LinksFromResults(missionReportVM res) 
+        {
+
+
+
+            return View();
         }
     }
 }
