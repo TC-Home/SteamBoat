@@ -11,8 +11,10 @@ using SteamBoat.Models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace SteamBoat.Controllers
 {
@@ -51,6 +53,10 @@ namespace SteamBoat.Controllers
             {
                 string res = _SteamBoatService.LHFandGaps(Freshness.Fresh);
             }
+            else 
+            {
+                string res = _SteamBoatService.LHFandGaps(Freshness.AnyCached);
+            }
             var myLHfs = _SteamBoatService.GetLHFS();
             return View(myLHfs);
         }
@@ -68,8 +74,49 @@ namespace SteamBoat.Controllers
 
         public IActionResult Index()
         {
-            
+
             return View();
+
+
+            }
+
+        public IActionResult ReadBuyOrders() 
+        {
+            var fileloc = Path.Combine(Directory.GetCurrentDirectory(), "downloads", "Steam Community __ Steam Community Market.html");
+
+            string BuyOrdersFile = System.IO.File.ReadAllText(fileloc);
+
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(BuyOrdersFile);
+            var htmlBody = htmlDoc.DocumentNode.SelectSingleNode("//body");
+            HtmlNodeCollection childnodes = htmlBody.ChildNodes;
+
+            //var x = htmlBody.Descendants.("div").Where(d => d.Attributes["id"].Value.Contains("mybuyorder_")); 
+            var buyorders = htmlBody.SelectNodes("//div[contains(@id, 'mybuyorder_')]");
+
+            foreach (var buyorder in buyorders)
+            {
+                //var x = buyorder.Descendants("a").ToList();
+                var market_listing_item_name = buyorder.Descendants("a").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_name_link").SingleOrDefault();
+                var Name = market_listing_item_name.InnerText;
+                var Link = market_listing_item_name.GetAttributeValue("href", "");
+                var hash_name = HttpUtility.UrlDecode(Last_in_array(Link, "/"));
+                var bid_and_quant = buyorder.Descendants("span").Where(c => c.GetAttributeValue("class", "") == "market_listing_price").ToList();
+                var bid_price_in_pound = Last_in_array(_SteamBoatService.Clean(bid_and_quant[0].InnerText), "@");
+                var bid_quant = int.Parse( _SteamBoatService.Clean(bid_and_quant[1].InnerText));
+                var bid_price = _SteamBoatService.poundtocent(bid_price_in_pound);
+                var myitem = _SteamBoatService.UpdateBidPrice(hash_name, bid_quant, bid_price, bid_price_in_pound);
+
+
+            }
+
+
+
+
+            return View();
+
+
+            
         }
 
         public IActionResult agility()
@@ -82,7 +129,7 @@ namespace SteamBoat.Controllers
             var htmlBody = htmlDoc.DocumentNode.SelectSingleNode("//body");
             HtmlNodeCollection childnodes = htmlBody.ChildNodes;
 
-            //var x = htmlBody.Descendants("ul").Where(d => d.Attributes["class"].Value.Contains("pagination")); ;
+            //var x = htmlBody.Descendants("ul").Where(d => d.Attributes["class"].Value.Contains("pagination")); market_listing_row market_recent_listing_row
             var x = htmlBody.Descendants("ul");
             foreach (var nNode in x)
             {
@@ -180,5 +227,15 @@ namespace SteamBoat.Controllers
 
             return View();
         }
+
+
+        private string Last_in_array(string myString, string separator) 
+        {
+
+            string[] parts = myString.Split(separator);
+            var hash_name = parts[parts.Length-1];
+            return hash_name;
+        }
+
     }
 }

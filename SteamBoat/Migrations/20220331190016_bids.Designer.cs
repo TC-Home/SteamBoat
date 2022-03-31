@@ -2,15 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220331190016_bids")]
+    partial class bids
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,9 +83,6 @@ namespace SteamBoat.Migrations
 
                     b.Property<string>("bid_price_in_pound")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("bid_quant")
-                        .HasColumnType("int");
 
                     b.Property<string>("item_nameid")
                         .HasColumnType("nvarchar(max)");

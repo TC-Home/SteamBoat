@@ -24,5 +24,15 @@ namespace SteamBoat.Interfaces
 
         public List<Item> GetGaps(int lowest = 10);
 
+        public int poundtocent(string pound, float? exrate = 1f);
+
+        public string UpdateBidPrice(string hash_name, int bid_quant, int bid_price, string bid_price_in_pound);
+   
+
+        public string Clean(string Dirty);
+
+        //remove all bids before updating them
+        public string ClearAllBids();
+
     }
 }

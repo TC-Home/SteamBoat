@@ -2,15 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220331195035_bids-quant")]
+    partial class bidsquant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

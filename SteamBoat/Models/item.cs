@@ -34,6 +34,11 @@ namespace SteamBoat.Models
 
         public int Gap { get; set; }
 
+        public string bid_price_in_pound { get; set; }
+
+        public int bid_price { get; set; }
+        public int bid_quant { get; set; }
+
 
     }
 }

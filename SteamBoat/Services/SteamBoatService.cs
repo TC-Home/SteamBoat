@@ -245,6 +245,7 @@ namespace SteamBoat.Services
         }
         public string LHFandGaps(Freshness freshness)
         {
+            ClearAllBids();
             var myItems = _context.Items.OrderByDescending(o => o.StartingPrice).ToList();
             foreach (var myItem in myItems.ToList()) 
             {
@@ -291,7 +292,16 @@ namespace SteamBoat.Services
                 myItem.max_buy_price = int_max_buy_price;
                 myItem.min_sell_price = int_min_sell_price;
                 myItem.next_min_sell_price = int_next_min_sell_price;
-             
+                myItem.StartingPrice = int_min_sell_price;
+
+
+                //myItem.orders = 0;
+                //myItem.max_buy_price = 0;
+                //myItem.min_sell_price = 0;
+                //myItem.next_min_sell_price = 0;
+
+
+
                 var lhf = ((double)int_next_min_sell_price - (double)int_min_sell_price) / (double)int_next_min_sell_price * 100;
                 var gap = ((double)int_min_sell_price - (double)int_max_buy_price) / (double)int_min_sell_price * 100;
 
@@ -333,5 +343,73 @@ namespace SteamBoat.Services
 
             return "";
         }
+
+        public int poundtocent(string pound, float? exrate) 
+
+        {
+            
+            pound = pound.Replace("/n", "");
+            pound = pound.Replace("/r", "");
+            pound = pound.Replace("£", "");
+            pound = pound.Replace(".","");
+            pound = pound.Replace(",", "");
+            float? cent = float.Parse(pound);
+            cent = cent * exrate;
+            return Convert.ToInt32(cent);
+
+
+
+
+
+
+
+        }
+
+        public string Clean(string Dirty) 
+        {
+
+
+            return Dirty.Replace("\n", "").Replace("\r", "").Replace("\t", "");
+
+
+
+        }
+
+        public string UpdateBidPrice(string hash_name, int bid_quant, int bid_price, string bid_price_in_pound) 
+        {
+            var myitem = _context.Items.Where(w => w.hash_name_key == hash_name).SingleOrDefault();
+
+            if (myitem != null)
+            {
+                myitem.bid_quant = bid_quant;
+                myitem.bid_price = bid_price;
+                myitem.bid_price_in_pound = bid_price_in_pound;
+                _context.SaveChanges();
+
+            }
+            else 
+            {
+            
+            }
+
+
+            return ("OK");
+        }
+
+        //remove all bids before updating them
+        public string ClearAllBids()
+        {
+            var items = _context.Items.ToList();
+            foreach (var item in items) 
+            {
+                item.bid_quant = 0;
+                item.bid_price = 0;
+                item.bid_price_in_pound = "";
+            }
+            _context.SaveChanges();
+            return "OK";
+        }
+
+
     }
 }
