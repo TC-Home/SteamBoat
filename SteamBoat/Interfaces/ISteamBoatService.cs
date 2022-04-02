@@ -16,7 +16,7 @@ namespace SteamBoat.Interfaces
 
         public missionReportVM GetItemsfromJSON(GrabResult GrabbedJSON, Mission Mission, missionReportVM MissionReport, Freshness Freshness);
 
-        public missionReportVM CreateUpdateItemPage(string hash_name, Mission Mission, missionReportVM MissionReport, int sellprice);
+        public missionReportVM CreateUpdateItemPage(string hash_name, string itemUrl, missionReportVM MissionReport, int sellprice, string imageurl, string fullitemURL = null);
 
         public string LHFandGaps(Freshness freshness);
 
@@ -33,6 +33,9 @@ namespace SteamBoat.Interfaces
 
         //remove all bids before updating them
         public string ClearAllBids();
+
+        public List<Item> GetAllItems(); 
+        
 
     }
 }

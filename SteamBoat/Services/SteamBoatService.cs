@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace SteamBoat.Services
 {
@@ -137,7 +138,14 @@ namespace SteamBoat.Services
                 var sell_price = item.SelectToken("sell_price").Value<string>();
                 var name = item.SelectToken("name").Value<string>();
                 var sell_price_text = item.SelectToken("sell_price_text").Value<string>();
-               // Console.WriteLine(name + " " + sell_price_text + " (" + sell_listings + ")");
+                // Console.WriteLine(name + " " + sell_price_text + " (" + sell_listings + ")");
+                var assets = item.SelectToken("asset_description");
+                var URL  = assets.SelectToken("icon_url").Value<string>();
+
+
+
+          
+
 
                 if (Int32.Parse(sell_listings) > Mission.ListingsMin) 
                 {
@@ -153,7 +161,7 @@ namespace SteamBoat.Services
                                 Console.WriteLine("Adding url to report : " + name + " " + sell_price_text + " ("+ sell_listings + ")");
                                 MissionReport.urls.Add(Mission.ItemUrl + item.SelectToken("hash_name"));
 
-                                CreateUpdateItemPage(item.SelectToken("hash_name").Value<string>(),  Mission, MissionReport, Int32.Parse(sell_price));
+                                CreateUpdateItemPage(item.SelectToken("hash_name").Value<string>(),  Mission.ItemUrl, MissionReport, Int32.Parse(sell_price), URL);
 
                                 //var itempage = _ContentGrabberService.GrabMe(Mission.ItemUrl + item.SelectToken("hash_name"),Freshness);
                                 //ParseItem(item.SelectToken("hash_name").Value<string>(),itempage.HTML, Mission, MissionReport);
@@ -182,7 +190,7 @@ namespace SteamBoat.Services
         }
 
 
-        public missionReportVM CreateUpdateItemPage(string hash_name, Mission Mission, missionReportVM MissionReport, int sellprice)
+        public missionReportVM CreateUpdateItemPage(string hash_name, string itemUrl, missionReportVM MissionReport, int sellprice, string imageurl, string fullitemURL = null)
         {
 
             //do we have the item
@@ -198,10 +206,21 @@ namespace SteamBoat.Services
             }
             else
             {
-                //we dont have the item, grab it
-                Console.WriteLine("Need item_nameid - getting page");
+
+                //we dont have the item, grab it from NET
+                Console.WriteLine("Need item_nameid - getting page | ADDINg ITEM");
                 //anycached becasue there defo shouldnt be one anyway
-                var itemGrab = _ContentGrabberService.GrabMe(Mission.ItemUrl + hash_name, Freshness.AnyCached);
+
+                GrabResult itemGrab = null;
+
+                if (fullitemURL != null)
+                {
+                    itemGrab = _ContentGrabberService.GrabMe(fullitemURL, Freshness.AnyCached);
+                }
+                else
+                {
+                    itemGrab = _ContentGrabberService.GrabMe(itemUrl + hash_name, Freshness.AnyCached);
+                }
 
 
                 //PARSE IT
@@ -220,7 +239,14 @@ namespace SteamBoat.Services
                 //Get name and game
                 myNewItem.hash_name_key = hash_name;
                 myNewItem.Game = crumbItems[3].InnerText;
-                myNewItem.Name = crumbItems[5].InnerText;
+                try
+                {
+                    myNewItem.Name = crumbItems[5].InnerText;
+                }
+                catch 
+                {
+                    myNewItem.Name = "Unknown";
+                }
 
                 //get number for sale
                 string item_nameid = getBetween(itemGrab.HTML, "Market_LoadOrderSpread( ", " );	// initial load");
@@ -234,10 +260,28 @@ namespace SteamBoat.Services
                 myNewItem.ItemStatsURL = "https://steamcommunity.com/market/itemordershistogram?country=GB&language=english&currency=2&item_nameid=" + item_nameid + "&two_factor=0&norender=1";
                 myNewItem.StartingPrice = sellprice;
 
-                _context.Items.Add(myNewItem);
+                //GET THE THUMB
 
+                try 
+                {
+                    using (var client = new WebClient())
+                    {
+                        client.DownloadFile("https://community.cloudflare.steamstatic.com/economy/image/" + imageurl + "/100fx116f", "wwwroot/itemimages/" + hash_name + ".png");
+                    } 
+                }
+                catch { }
+
+
+                //UPDATE THE STATS ON THE NEW ITEM
+
+                UpdateStatsforItem(myNewItem, Freshness.Fresh);
+                _context.Items.Add(myNewItem);
+                
                 _context.SaveChanges();
-            } 
+                
+                
+
+                } 
 
 
 
@@ -249,64 +293,8 @@ namespace SteamBoat.Services
             var myItems = _context.Items.OrderByDescending(o => o.StartingPrice).ToList();
             foreach (var myItem in myItems.ToList()) 
             {
-                var myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0 );
 
-
-                var myJSOObject = JObject.Parse(myStats.JSON);
-
-                var obj_linq = myJSOObject.Cast<KeyValuePair<string, JToken>>();
-
-                var buys =  obj_linq.Where(k => k.Key == "buy_order_graph").FirstOrDefault().Value;
-                var sells = obj_linq.Where(k => k.Key == "sell_order_graph").FirstOrDefault().Value;
-                var buy_order_count = obj_linq.Where(k => k.Key == "buy_order_count").FirstOrDefault().Value;
-                var sell_order_count = obj_linq.Where(k => k.Key == "sell_order_count").FirstOrDefault().Value;
-
-                var x = ((JValue)buys[0][0]).Value.GetType();
-
-                double max_buy_price  = Convert.ToDouble(((JValue)buys[0][0]).Value);
-             
-                double next_max_buy_price = 0;
-                double next_min_sell_price = 0;
-                //double next_max_buy_price = 0;
-                try
-                {
-                    next_max_buy_price = Convert.ToDouble(((JValue)buys[1][0]).Value);
-                }
-                catch { }
-                double min_sell_price = Convert.ToDouble(((JValue)sells[0][0]).Value);
-                try
-                {
-                    next_min_sell_price = Convert.ToDouble(((JValue)sells[1][0]).Value);
-                }
-                catch { }
-
-
-                int int_buy_order_count = int.Parse(buy_order_count.ToString().Replace(",",""));
-                int int_sell_order_count = int.Parse(sell_order_count.ToString().Replace(",", ""));
-                int int_max_buy_price = (int)(max_buy_price * 100);
-                int int_next_max_buy_price = (int)(next_max_buy_price * 100);
-                int int_min_sell_price = (int)(min_sell_price * 100);
-                int int_next_min_sell_price = (int)(next_min_sell_price * 100);
-
-                myItem.orders = int_buy_order_count + int_sell_order_count;
-                myItem.max_buy_price = int_max_buy_price;
-                myItem.min_sell_price = int_min_sell_price;
-                myItem.next_min_sell_price = int_next_min_sell_price;
-                myItem.StartingPrice = int_min_sell_price;
-
-
-                //myItem.orders = 0;
-                //myItem.max_buy_price = 0;
-                //myItem.min_sell_price = 0;
-                //myItem.next_min_sell_price = 0;
-
-
-
-                var lhf = ((double)int_next_min_sell_price - (double)int_min_sell_price) / (double)int_next_min_sell_price * 100;
-                var gap = ((double)int_min_sell_price - (double)int_max_buy_price) / (double)int_min_sell_price * 100;
-
-                myItem.Fruit = (int)lhf;
-                myItem.Gap = (int)gap;
+                UpdateStatsforItem(myItem, freshness);
 
                 _context.SaveChanges();
 
@@ -316,6 +304,62 @@ namespace SteamBoat.Services
             }
             return "OK";
         }
+
+        string UpdateStatsforItem(Item myItem, Freshness freshness) 
+        {
+            var myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
+
+
+            var myJSOObject = JObject.Parse(myStats.JSON);
+
+            var obj_linq = myJSOObject.Cast<KeyValuePair<string, JToken>>();
+
+            var buys = obj_linq.Where(k => k.Key == "buy_order_graph").FirstOrDefault().Value;
+            var sells = obj_linq.Where(k => k.Key == "sell_order_graph").FirstOrDefault().Value;
+            var buy_order_count = obj_linq.Where(k => k.Key == "buy_order_count").FirstOrDefault().Value;
+            var sell_order_count = obj_linq.Where(k => k.Key == "sell_order_count").FirstOrDefault().Value;
+
+            var x = ((JValue)buys[0][0]).Value.GetType();
+
+            double max_buy_price = Convert.ToDouble(((JValue)buys[0][0]).Value);
+
+            double next_max_buy_price = 0;
+            double next_min_sell_price = 0;
+            //double next_max_buy_price = 0;
+            try
+            {
+                next_max_buy_price = Convert.ToDouble(((JValue)buys[1][0]).Value);
+            }
+            catch { }
+            double min_sell_price = Convert.ToDouble(((JValue)sells[0][0]).Value);
+            try
+            {
+                next_min_sell_price = Convert.ToDouble(((JValue)sells[1][0]).Value);
+            }
+            catch { }
+
+
+            int int_buy_order_count = int.Parse(buy_order_count.ToString().Replace(",", ""));
+            int int_sell_order_count = int.Parse(sell_order_count.ToString().Replace(",", ""));
+            int int_max_buy_price = (int)(max_buy_price * 100);
+            int int_next_max_buy_price = (int)(next_max_buy_price * 100);
+            int int_min_sell_price = (int)(min_sell_price * 100);
+            int int_next_min_sell_price = (int)(next_min_sell_price * 100);
+
+            myItem.orders = int_buy_order_count + int_sell_order_count;
+            myItem.max_buy_price = int_max_buy_price;
+            myItem.min_sell_price = int_min_sell_price;
+            myItem.next_min_sell_price = int_next_min_sell_price;
+            myItem.StartingPrice = int_min_sell_price;
+
+            var lhf = ((double)int_next_min_sell_price - (double)int_min_sell_price) / (double)int_next_min_sell_price * 100;
+            var gap = ((double)int_min_sell_price - (double)int_max_buy_price) / (double)int_min_sell_price * 100;
+
+            myItem.Fruit = (int)lhf;
+            myItem.Gap = (int)gap;
+            return "OK";
+        }
+
         public List<Item> GetLHFS(int lowest = 10) 
         {
 
@@ -389,12 +433,21 @@ namespace SteamBoat.Services
             }
             else 
             {
-            
+                Console.WriteLine("Couldnt find : " + hash_name);
             }
 
 
             return ("OK");
         }
+
+
+        public List<Item> GetAllItems() 
+        {
+            var items = _context.Items.ToList();
+            return items;
+        
+        }
+
 
         //remove all bids before updating them
         public string ClearAllBids()

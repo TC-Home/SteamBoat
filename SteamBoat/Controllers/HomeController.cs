@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -61,6 +62,14 @@ namespace SteamBoat.Controllers
             return View(myLHfs);
         }
 
+        public IActionResult CheckBids() 
+        {
+
+            var items = _SteamBoatService.GetAllItems();
+            var bids = items.Where(b => b.bid_price != 0).ToList();
+            return View("/views/home/items.cshtml", bids);
+        
+        }
         public IActionResult Gaps(bool grab = false)
         {
             if (grab)
@@ -74,7 +83,7 @@ namespace SteamBoat.Controllers
 
         public IActionResult Index()
         {
-
+            
             return View();
 
 
@@ -105,6 +114,12 @@ namespace SteamBoat.Controllers
                 var bid_price_in_pound = Last_in_array(_SteamBoatService.Clean(bid_and_quant[0].InnerText), "@");
                 var bid_quant = int.Parse( _SteamBoatService.Clean(bid_and_quant[1].InnerText));
                 var bid_price = _SteamBoatService.poundtocent(bid_price_in_pound);
+                //var imageURL = buyorder.Descendants("img").Single();
+                var imageURLFULL = buyorder.Descendants("img").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_img").SingleOrDefault();
+                var imageURL = imageURLFULL.GetAttributeValue("src", "");
+                imageURL = imageURL.Replace("/38fx38f", "").Replace("https://community.cloudflare.steamstatic.com/economy/image/", "");
+                missionReportVM unused = new missionReportVM();
+               var addResult = _SteamBoatService.CreateUpdateItemPage(hash_name, Link, unused, 0, imageURL, Link);
                 var myitem = _SteamBoatService.UpdateBidPrice(hash_name, bid_quant, bid_price, bid_price_in_pound);
 
 
@@ -112,11 +127,12 @@ namespace SteamBoat.Controllers
 
 
 
+            var items = _SteamBoatService.GetAllItems();
+            var bids = items.Where(b => b.bid_price != 0).ToList();
+            return View("/views/home/items.cshtml", bids);
 
-            return View();
 
 
-            
         }
 
         public IActionResult agility()
@@ -219,13 +235,22 @@ namespace SteamBoat.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-
         public IActionResult LinksFromResults(missionReportVM res) 
         {
 
 
 
             return View();
+        }
+
+        public IActionResult Items() 
+        {
+
+            var items = _SteamBoatService.GetAllItems();
+            return View(items);
+
+
+
         }
 
 
