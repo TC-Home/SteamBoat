@@ -199,9 +199,9 @@ namespace SteamBoat.Services
             {
                 Console.WriteLine("Already got item_nameid - got grabbing page");
                 //we have the item
-                myItem.StartingPrice = sellprice;
+                //myItem.StartingPrice = sellprice;
           
-                _context.SaveChanges();
+                //_context.SaveChanges();
 
             }
             else
@@ -266,7 +266,7 @@ namespace SteamBoat.Services
                 {
                     using (var client = new WebClient())
                     {
-                        client.DownloadFile("https://community.cloudflare.steamstatic.com/economy/image/" + imageurl + "/100fx116f", "wwwroot/itemimages/" + hash_name + ".png");
+                        client.DownloadFile("https://community.cloudflare.steamstatic.com/economy/image/" + imageurl + "/100fx116f", "wwwroot/itemimages/" + hash_name.Replace(":", " ") + ".png");
                     } 
                 }
                 catch { }
@@ -289,7 +289,7 @@ namespace SteamBoat.Services
         }
         public string LHFandGaps(Freshness freshness)
         {
-            ClearAllBids();
+        
             var myItems = _context.Items.OrderByDescending(o => o.StartingPrice).ToList();
             foreach (var myItem in myItems.ToList()) 
             {
@@ -319,19 +319,28 @@ namespace SteamBoat.Services
             var buy_order_count = obj_linq.Where(k => k.Key == "buy_order_count").FirstOrDefault().Value;
             var sell_order_count = obj_linq.Where(k => k.Key == "sell_order_count").FirstOrDefault().Value;
 
-            var x = ((JValue)buys[0][0]).Value.GetType();
-
-            double max_buy_price = Convert.ToDouble(((JValue)buys[0][0]).Value);
+            //var x = ((JValue)buys[0][0]).Value.GetType();
 
             double next_max_buy_price = 0;
             double next_min_sell_price = 0;
-            //double next_max_buy_price = 0;
+            double max_buy_price = 0;
+            double min_sell_price = 0;
+
+            try
+            {
+                max_buy_price = Convert.ToDouble(((JValue)buys[0][0]).Value);
+            } 
+            catch { }
             try
             {
                 next_max_buy_price = Convert.ToDouble(((JValue)buys[1][0]).Value);
             }
+            catch  { }
+            try
+            {
+              min_sell_price = Convert.ToDouble(((JValue)sells[0][0]).Value);
+            }
             catch { }
-            double min_sell_price = Convert.ToDouble(((JValue)sells[0][0]).Value);
             try
             {
                 next_min_sell_price = Convert.ToDouble(((JValue)sells[1][0]).Value);
@@ -375,7 +384,7 @@ namespace SteamBoat.Services
 
         }
 
-        string getBetween(string strSource, string strStart, string strEnd)
+        public string getBetween(string strSource, string strStart, string strEnd)
         {
             if (strSource.Contains(strStart) && strSource.Contains(strEnd))
             {
@@ -463,6 +472,30 @@ namespace SteamBoat.Services
             return "OK";
         }
 
+        public string ClearAllSales() 
+        {
+            var items = _context.ItemsForSale.ToList();
+            foreach (var item in items)
+            {
+                _context.ItemsForSale.Remove(item);
+            }
+            _context.SaveChanges();
+            return "OK";
+
+        }
+
+        public string AddSellListing(string hash_name, int sell_price_after_fees) 
+        {
+
+            var newSaleitem = new ItemForSale();
+            newSaleitem.Game_hash_name_key = hash_name;
+            newSaleitem.sale_price_after_fees = sell_price_after_fees;
+
+            _context.ItemsForSale.Add(newSaleitem);
+            _context.SaveChanges();
+            return "OK";
+
+        }
 
     }
 }

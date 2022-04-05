@@ -18,5 +18,9 @@ namespace SteamBoat.Data
         public DbSet<SteamBoat.Models.Mission> Mission { get; set; }
 
         public DbSet<SteamBoat.Models.FeederUrl> FeederUrl { get; set; }
+
+        public DbSet<SteamBoat.Models.ItemForSale> ItemsForSale { get; set; }
+
     }
 }
+

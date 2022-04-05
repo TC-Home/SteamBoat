@@ -28,14 +28,15 @@
             <th>
                 @Html.DisplayNameFor(model => model.Activity)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.max_buy_price)
-            </th>
+        
             <th>
                 @Html.DisplayNameFor(model => model.Fruit)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Gap)
+            </th>
+                <th>
+                @Html.DisplayNameFor(model => model.max_buy_price)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.bid_price)
@@ -68,7 +69,7 @@
                 <tr>
             <td>
                 <a href="@item.ItemPageURL" target="_blank">
-                <img src="/itemimages/@{@item.hash_name_key}.png" style="height: 60px;" />
+                <img src="/itemimages/@{@item.hash_name_key.Replace(":"," ")}.png" style="height: 60px;" />
             </a>
             </td>
             <td>
@@ -82,14 +83,15 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Activity)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.max_buy_price)
-            </td>
+         
             <td>
                 @Html.DisplayFor(modelItem => item.Fruit)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Gap)
+            </td>
+               <td>
+                @Html.DisplayFor(modelItem => item.max_buy_price)
             </td>
             <td class="@bidcss">
                 @Html.DisplayFor(modelItem => item.bid_price)

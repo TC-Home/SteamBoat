@@ -34,8 +34,15 @@ namespace SteamBoat.Interfaces
         //remove all bids before updating them
         public string ClearAllBids();
 
-        public List<Item> GetAllItems(); 
-        
+        public string ClearAllSales();
+
+        public string AddSellListing(string hash_name, int sell_price_after_fees);
+
+        public List<Item> GetAllItems();
+
+        public string getBetween(string strSource, string strStart, string strEnd);
+
+
 
     }
 }

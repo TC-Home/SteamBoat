@@ -89,9 +89,12 @@ namespace SteamBoat.Controllers
 
             }
 
-        public IActionResult ReadBuyOrders() 
+        public IActionResult ReadBuyAndSellOrders() 
         {
-            var fileloc = Path.Combine(Directory.GetCurrentDirectory(), "downloads", "Steam Community __ Steam Community Market.html");
+            _SteamBoatService.ClearAllBids();
+
+            //BUYS ** BUYS ** BUYS ** BUYS ** BUYS ** BUYS ** BUYS ** BUYS ** BUYS ** BUYS ** 
+            var fileloc = Path.Combine(Directory.GetCurrentDirectory(), "downloads", "view-source_https___steamcommunity.com_market_.html");
 
             string BuyOrdersFile = System.IO.File.ReadAllText(fileloc);
 
@@ -124,6 +127,32 @@ namespace SteamBoat.Controllers
 
 
             }
+
+            //* SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS 
+            _SteamBoatService.ClearAllSales();
+            var sellorders = htmlBody.SelectNodes("//div[contains(@id, 'mylisting_')]");
+            foreach (var sellorder in sellorders)
+            {
+                //var x = buyorder.Descendants("a").ToList();
+                var market_listing_item_name = sellorder.Descendants("a").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_name_link").SingleOrDefault();
+                var Name = market_listing_item_name.InnerText;
+                var Link = market_listing_item_name.GetAttributeValue("href", "");
+                var hash_name = HttpUtility.UrlDecode(Last_in_array(Link, "/"));
+                var bid_and_quant = sellorder.Descendants("span").Where(c => c.GetAttributeValue("class", "") == "market_listing_price").ToList();
+                var sell_price_without_and_with_fees = Last_in_array(_SteamBoatService.Clean(bid_and_quant[0].InnerText), "@");
+                var sell_price_after_fees = _SteamBoatService.getBetween(sell_price_without_and_with_fees, "(", ")");
+                var int_sell_price_after_fees = _SteamBoatService.poundtocent(sell_price_after_fees);
+                
+                var imageURLFULL = sellorder.Descendants("img").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_img").SingleOrDefault();
+                var imageURL = imageURLFULL.GetAttributeValue("src", "");
+                imageURL = imageURL.Replace("/38fx38f", "").Replace("https://community.cloudflare.steamstatic.com/economy/image/", "");
+                missionReportVM unused = new missionReportVM();
+                var addResult = _SteamBoatService.CreateUpdateItemPage(hash_name, Link, unused, 0, imageURL, Link);
+                var myitem = _SteamBoatService.AddSellListing(hash_name, int_sell_price_after_fees);
+
+
+            }
+
 
 
 
@@ -248,6 +277,13 @@ namespace SteamBoat.Controllers
 
             var items = _SteamBoatService.GetAllItems();
             return View(items);
+        }
+
+        public IActionResult ItemsGold()
+        {
+
+            var items = _SteamBoatService.GetAllItems().Where(sp => sp.StartingPrice > 50).Where(a => a.Activity > 70).Where(g => g.StartingPrice > 20);
+            return View("/views/home/items.cshtml", items);
 
 
 

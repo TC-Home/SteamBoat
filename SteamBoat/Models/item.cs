@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -38,6 +39,20 @@ namespace SteamBoat.Models
 
         public int bid_price { get; set; }
         public int bid_quant { get; set; }
+
+        public ICollection<ItemForSale> ItemsForSale { get; set; }
+    }
+
+
+    public class ItemForSale 
+    {
+        [Key]
+        public int Id { get; set; }
+        [ForeignKey("Item")]
+        public string Game_hash_name_key { get; set; }
+
+        public int sale_price_after_fees { get; set; }
+
 
 
     }

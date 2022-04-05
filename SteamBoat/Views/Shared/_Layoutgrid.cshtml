@@ -46,7 +46,7 @@
                         </li>
                
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadBuyOrders" asp-route-grab="false">Read Buy Orders</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadBuyAndSellOrders" asp-route-grab="false">Read Buy Orders</a>
                         </li>
                             <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Items" asp-route-grab="false">Items</a>
@@ -76,7 +76,7 @@
     @await RenderSectionAsync("Scripts", required: false)
     <script>
         $(document).ready(function() {
-        $('#items').DataTable({"pageLength": 500});
+        $('#items').DataTable({"pageLength": 1000});
         } );
 </script>
 </body>
