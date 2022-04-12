@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 
 namespace SteamBoat.Services
 {
@@ -314,6 +315,13 @@ namespace SteamBoat.Services
 
             var obj_linq = myJSOObject.Cast<KeyValuePair<string, JToken>>();
 
+            if (obj_linq.Count() == 1)
+            {
+                Console.WriteLine(" ###### GOT A BAD READ : " + myItem.hash_name_key + " " + myItem.Name);
+                return "OK";
+
+            }
+
             var buys = obj_linq.Where(k => k.Key == "buy_order_graph").FirstOrDefault().Value;
             var sells = obj_linq.Where(k => k.Key == "sell_order_graph").FirstOrDefault().Value;
             var buy_order_count = obj_linq.Where(k => k.Key == "buy_order_count").FirstOrDefault().Value;
@@ -457,6 +465,45 @@ namespace SteamBoat.Services
         
         }
 
+        public List<ItemForSale> GetAllSaleItems() 
+        {
+            var Saleitems = _context.ItemsForSale.ToList();
+            return Saleitems;
+
+        }
+
+        public string CheckSalePrices()
+        {
+            //Loop through all sale itemns and update stats from items.
+            //Run after doing a fresh LHF
+
+            var saleitems = _context.ItemsForSale.ToList();
+
+            foreach (var si in saleitems) 
+            {
+
+                var myItem = _context.Items.Where(h => h.hash_name_key == si.Game_hash_name_key ).SingleOrDefault();
+                if (myItem != null) 
+                {
+
+
+                    si.max_buy_bid = myItem.max_buy_price;
+
+
+                    var diff = ((double)si.sale_price - (double)si.max_buy_bid) / (double)si.sale_price * 100;
+                    si.max_buy_bid_diff = (int)diff;
+
+                    var diff2 = ((double)si.sale_price - (double)myItem.StartingPrice) / (double)si.sale_price * 100;
+                    si.sale_price_diff = (int)diff2;
+                    _context.SaveChanges();
+                }
+            
+            }
+
+            return "OK";
+
+        }
+
 
         //remove all bids before updating them
         public string ClearAllBids()
@@ -484,13 +531,20 @@ namespace SteamBoat.Services
 
         }
 
-        public string AddSellListing(string hash_name, int sell_price_after_fees) 
+        public List<Item> GetAllItemsandSales() 
+        {
+            var items = _context.Items.Include("ItemsForSale").Where(i => i.ItemsForSale.Count > 0).ToList();
+            return items;
+
+        }
+
+        public string AddSellListing(string hash_name, int sell_price_after_fees, int int_sell_price_without_fees) 
         {
 
             var newSaleitem = new ItemForSale();
             newSaleitem.Game_hash_name_key = hash_name;
             newSaleitem.sale_price_after_fees = sell_price_after_fees;
-
+            newSaleitem.sale_price = int_sell_price_without_fees;
             _context.ItemsForSale.Add(newSaleitem);
             _context.SaveChanges();
             return "OK";

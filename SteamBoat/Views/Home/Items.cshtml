@@ -7,20 +7,19 @@
 @{
     ViewData["Title"] = "Items";
 }
-
-<h1>Items</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table" id="items">
     <thead>
         <tr>
                <th>
                 
+            </th> <th>
+                @Html.DisplayNameFor(model => model.Name)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                @Html.DisplayNameFor(model => model.Game)
+            </th>
+                <th>
+                @Html.DisplayNameFor(model => model.Fruit)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.StartingPrice)
@@ -29,21 +28,17 @@
                 @Html.DisplayNameFor(model => model.Activity)
             </th>
         
-            <th>
-                @Html.DisplayNameFor(model => model.Fruit)
-            </th>
+       
             <th>
                 @Html.DisplayNameFor(model => model.Gap)
             </th>
                 <th>
-                @Html.DisplayNameFor(model => model.max_buy_price)
+                Top Bid
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.bid_price)
+                My Bid
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.bid_quant)
-            </th>
+          
 
         </tr>
     </thead>
@@ -63,7 +58,59 @@
             }
 
             if (item.bid_price == 0) { bidcss = ""; }
-        
+
+
+            var mygreen = (item.Gap * 4) - 30;
+            var myred = 255 -(item.Gap * 10);
+            if (mygreen > 255) { mygreen = 255; }
+            if (myred > 255) { myred = 255; }
+
+            var gapcss = "";
+
+
+            if (item.Gap > 19)
+            {
+                gapcss = "background-color: rgb(" + (255 - mygreen).ToString() + ",255," + (255 - mygreen).ToString() + ")";
+            }
+            else
+            {
+
+                gapcss = "background-color: rgb(255," + (255 - myred).ToString() + "," + (255 - myred).ToString() + ")";
+            }
+         
+
+            //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY 
+            var mygreen2 = (item.Activity/ 2.5);
+            var myred2 = (255 -((item.Activity/ 2.5)* 8)) ;
+            if (mygreen2 > 255) { mygreen2 = 255; }
+            if (myred2 > 255) { myred2 = 255; }
+
+            var activitycss  = "";
+
+
+            if (item.Activity > 74)
+            {
+                activitycss = "background-color: rgb(" + (255 - (int)mygreen2).ToString() + ",255," + (255 - (int)mygreen2).ToString() + ")";
+            }
+            else
+            {
+
+                activitycss = "background-color: rgb(255," + (255 - (int)myred2).ToString() + "," + (255 - (int)myred2).ToString() + ")";
+            }
+
+
+
+
+
+
+
+
+
+
+
+           
+
+            var gamesearch = "https://steamcommunity.com/market/search?q=" + item.Game.Replace(" Community Items", "").Replace("™", " ").Replace(":", "") + "#p1_price_desc";
 
 
                 <tr>
@@ -72,22 +119,28 @@
                 <img src="/itemimages/@{@item.hash_name_key.Replace(":"," ")}.png" style="height: 60px;" />
             </a>
             </td>
-            <td>
+                <td>
                 <a href="@item.ItemPageURL" target="_blank">
                 @Html.DisplayFor(modelItem => item.Name)
                 </a>
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartingPrice)
+              <td>
+                <a href="@gamesearch" target="_blank">
+                @Html.DisplayFor(modelItem => item.Game)
+                </a>
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Activity)
-            </td>
-         
             <td>
                 @Html.DisplayFor(modelItem => item.Fruit)
             </td>
             <td>
+                @Html.DisplayFor(modelItem => item.StartingPrice)
+            </td>
+             <td style="@activitycss">
+                @Html.DisplayFor(modelItem => item.Activity)
+            </td>
+         
+        
+            <td style="@gapcss">
                 @Html.DisplayFor(modelItem => item.Gap)
             </td>
                <td>
@@ -96,9 +149,7 @@
             <td class="@bidcss">
                 @Html.DisplayFor(modelItem => item.bid_price)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.bid_quant)
-            </td>
+         
       
         </tr>
 }

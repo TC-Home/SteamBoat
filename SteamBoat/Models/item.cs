@@ -39,7 +39,7 @@ namespace SteamBoat.Models
 
         public int bid_price { get; set; }
         public int bid_quant { get; set; }
-
+        [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }
     }
 
@@ -50,6 +50,14 @@ namespace SteamBoat.Models
         public int Id { get; set; }
         [ForeignKey("Item")]
         public string Game_hash_name_key { get; set; }
+
+        public int sale_price { get; set; }
+
+        public int max_buy_bid { get; set; }
+
+        public int max_buy_bid_diff { get; set; }
+        
+        public int sale_price_diff { get; set; }
 
         public int sale_price_after_fees { get; set; }
 

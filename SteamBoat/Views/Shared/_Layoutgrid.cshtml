@@ -6,7 +6,8 @@
     <title>@ViewData["Title"] - SteamBoat</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
+    <!--<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />-->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/sb-1.3.2/sp-2.0.0/datatables.min.css"/>
     <style>
        
 
@@ -16,9 +17,9 @@
     </style>
 </head>
 <body>
-    <header>
+   <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
+            <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SteamBoat</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +34,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Domission" asp-route-id="1" asp-route-grab="true">Mission 1 (fresh)</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Domission" asp-route-id="1" asp-route-grab="false">Mission 1 (cached)</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Domission" asp-route-id="2" asp-route-grab="true">Mission 2 (fresh)</a>
                         </li>
                          <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="LHF" asp-route-grab="true">LHF(grab)</a>
@@ -46,10 +47,16 @@
                         </li>
                
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadBuyAndSellOrders" asp-route-grab="false">Read Buy Orders</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadBuyAndSellOrders" asp-route-grab="false">Read Buy/Sell Orders</a>
                         </li>
                             <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Items" asp-route-grab="false">Items</a>
+                        </li>
+                              <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ItemsGold">Items Gold</a>
+                        </li>
+                          <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="CheckSalePrices">CSP</a>
                         </li>
                         
                     </ul>
@@ -72,11 +79,12 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <!--<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>-->
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/sb-1.3.2/sp-2.0.0/datatables.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
         $(document).ready(function() {
-        $('#items').DataTable({"pageLength": 1000});
+        $('#items').DataTable({"pageLength": 1000, "fixedHeader": true,dom: 'Qlfrtip'});
         } );
 </script>
 </body>

@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <Folder Include="downloads\" />
+    <Folder Include="wwwroot\datatables\js\" />
     <Folder Include="wwwroot\itemimages\" />
   </ItemGroup>
 

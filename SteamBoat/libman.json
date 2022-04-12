@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "datatables-fixedheader@3.2.2",
+      "destination": "wwwroot/datatables-fixedheader/"
+    },
+    {
+      "library": "datatables@1.10.21",
+      "destination": "wwwroot/datatables/"
+    }
+  ]
+}

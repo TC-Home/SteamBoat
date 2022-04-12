@@ -85,6 +85,14 @@ a:active, a:visited {
 {
     background-color: #abd6f6;
 }
+.green {
+    background-color: #00ff00;
+}
+
+.amber {
+    background-color: #e0b95c;
+}
+
 table.dataTable tbody td {
     vertical-align: middle;
 }

@@ -142,13 +142,17 @@ namespace SteamBoat.Controllers
                 var sell_price_without_and_with_fees = Last_in_array(_SteamBoatService.Clean(bid_and_quant[0].InnerText), "@");
                 var sell_price_after_fees = _SteamBoatService.getBetween(sell_price_without_and_with_fees, "(", ")");
                 var int_sell_price_after_fees = _SteamBoatService.poundtocent(sell_price_after_fees);
-                
+
+                var sell_price_without_fees = sell_price_without_and_with_fees.Split("(")[0];
+                var int_sell_price_without_fees =  _SteamBoatService.poundtocent(sell_price_without_fees);
+
+
                 var imageURLFULL = sellorder.Descendants("img").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_img").SingleOrDefault();
                 var imageURL = imageURLFULL.GetAttributeValue("src", "");
                 imageURL = imageURL.Replace("/38fx38f", "").Replace("https://community.cloudflare.steamstatic.com/economy/image/", "");
                 missionReportVM unused = new missionReportVM();
                 var addResult = _SteamBoatService.CreateUpdateItemPage(hash_name, Link, unused, 0, imageURL, Link);
-                var myitem = _SteamBoatService.AddSellListing(hash_name, int_sell_price_after_fees);
+                var myitem = _SteamBoatService.AddSellListing(hash_name, int_sell_price_after_fees, int_sell_price_without_fees);
 
 
             }
@@ -282,9 +286,23 @@ namespace SteamBoat.Controllers
         public IActionResult ItemsGold()
         {
 
-            var items = _SteamBoatService.GetAllItems().Where(sp => sp.StartingPrice > 50).Where(a => a.Activity > 70).Where(g => g.StartingPrice > 20);
+            var items = _SteamBoatService.GetAllItems().Where(sp => sp.Gap > 19).Where(a => a.Activity > 74).Where(g => g.StartingPrice > 20);
             return View("/views/home/items.cshtml", items);
 
+
+
+        }
+
+
+        public IActionResult CheckSalePrices()
+        {
+
+            
+           var result = _SteamBoatService.CheckSalePrices();
+            var sale_items = _SteamBoatService.GetAllItemsandSales();
+            return View(sale_items);
+
+           
 
 
         }

@@ -1,0 +1,130 @@
+﻿@model IEnumerable<SteamBoat.Models.Item>
+
+@{
+    ViewData["Title"] = "CheckSalePrices";
+}
+<table class="table" id="items">
+    <thead>
+        <tr>
+            <th>
+                
+            </th>
+        <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Game)
+          
+            <th>
+                Buy Now
+            </th>
+          
+          <th>
+                My Price
+            </th>
+            <th>
+                My Price Diff
+            </th>
+        <th>
+                Max Bid
+            </th>
+           <th>
+                Max Bid Diff
+            </th>
+          
+                 <th>
+                @Html.DisplayNameFor(model => model.Activity)
+            </th>
+          
+
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY 
+            var mygreen2 = (item.Activity/ 2.5);
+            var myred2 = (255 -((item.Activity/ 2.5)* 8)) ;
+            if (mygreen2 > 255) { mygreen2 = 255; }
+            if (myred2 > 255) { myred2 = 255; }
+
+            var activitycss  = "";
+
+
+            if (item.Activity > 74)
+            {
+                activitycss = "background-color: rgb(" + (255 - (int)mygreen2).ToString() + ",255," + (255 - (int)mygreen2).ToString() + ")";
+            }
+            else
+            {
+
+                activitycss = "background-color: rgb(255," + (255 - (int)myred2).ToString() + "," + (255 - (int)myred2).ToString() + ")";
+            }
+
+
+
+
+
+     var gamesearch = "https://steamcommunity.com/market/search?q=" + item.Game.Replace(" Community Items", "").Replace("™", " ").Replace(":", "") + "#p1_price_desc";
+            var cheapest = new ItemForSale();      
+
+       @if (item.ItemsForSale.Count > 0)
+                    {
+                        var min = 1000000000;
+                        foreach (var sale in item.ItemsForSale)
+                        {
+                            if (sale.sale_price < min)
+                            {
+                        cheapest = sale;
+                        min = sale.sale_price;
+                            }
+                        }
+                        
+                    }
+
+ <tr>
+
+            <td>
+                <a href="@item.ItemPageURL" target="_blank">
+                <img src="/itemimages/@{@item.hash_name_key.Replace(":"," ")}.png" style="height: 60px;" />
+            </a>
+            </td>
+                <td>
+                <a href="@item.ItemPageURL" target="_blank">
+                @Html.DisplayFor(modelItem => item.Name)
+                </a>
+            </td>
+              <td>
+                <a href="@gamesearch" target="_blank">
+                @Html.DisplayFor(modelItem => item.Game)
+                </a>
+            </td>
+        
+            <td>
+                @Html.DisplayFor(modelItem => item.StartingPrice)
+            </td>
+        
+         
+        
+        
+         <td>
+                 @cheapest.sale_price
+            </td>
+              <td>
+                 @cheapest.sale_price_diff
+            </td>
+             <td>
+                 @cheapest.max_buy_bid
+            </td>
+         <td>
+                 @cheapest.max_buy_bid_diff 
+            </td>
+                  <td style="@activitycss">
+                @Html.DisplayFor(modelItem => item.Activity)
+            </td>
+            
+
+      
+        </tr>
+}
+    </tbody>
+</table>

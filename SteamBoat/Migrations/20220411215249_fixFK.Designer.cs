@@ -2,15 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220411215249_fixFK")]
+    partial class fixFK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,19 +117,16 @@ namespace SteamBoat.Migrations
                     b.Property<string>("Game_hash_name_key")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("max_buy_bid")
+                    b.Property<int>("differnce")
                         .HasColumnType("int");
 
-                    b.Property<int>("max_buy_bid_diff")
+                    b.Property<int>("max_buy_bid")
                         .HasColumnType("int");
 
                     b.Property<int>("sale_price")
                         .HasColumnType("int");
 
                     b.Property<int>("sale_price_after_fees")
-                        .HasColumnType("int");
-
-                    b.Property<int>("sale_price_diff")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

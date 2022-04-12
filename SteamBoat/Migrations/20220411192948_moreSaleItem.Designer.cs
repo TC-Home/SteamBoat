@@ -2,15 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220411192948_moreSaleItem")]
+    partial class moreSaleItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -113,12 +115,15 @@ namespace SteamBoat.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Game_hash_name_key")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Itemhash_name_key")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("max_buy_bid")
+                    b.Property<int>("differnce")
                         .HasColumnType("int");
 
-                    b.Property<int>("max_buy_bid_diff")
+                    b.Property<int>("max_buy_bid")
                         .HasColumnType("int");
 
                     b.Property<int>("sale_price")
@@ -127,12 +132,9 @@ namespace SteamBoat.Migrations
                     b.Property<int>("sale_price_after_fees")
                         .HasColumnType("int");
 
-                    b.Property<int>("sale_price_diff")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Game_hash_name_key");
+                    b.HasIndex("Itemhash_name_key");
 
                     b.ToTable("ItemsForSale");
                 });
@@ -183,7 +185,7 @@ namespace SteamBoat.Migrations
                 {
                     b.HasOne("SteamBoat.Models.Item", null)
                         .WithMany("ItemsForSale")
-                        .HasForeignKey("Game_hash_name_key");
+                        .HasForeignKey("Itemhash_name_key");
                 });
 
             modelBuilder.Entity("SteamBoat.Models.Item", b =>
