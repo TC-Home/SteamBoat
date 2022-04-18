@@ -38,7 +38,7 @@ namespace SteamBoat.Interfaces
 
         public string CheckSalePrices();
 
-        public string AddSellListing(string hash_name, int sell_price_after_fees, int int_sell_price_without_fees);
+        public string AddSellListing(string hash_name, int sell_price_after_fees, int int_sell_price_without_fees, string sell_price_without_fees);
 
         public List<Item> GetAllItems();
 
@@ -47,9 +47,13 @@ namespace SteamBoat.Interfaces
         
         public List<Item> GetAllItemsandSales();
 
+        public string UpdateTrans();
+
         public string getBetween(string strSource, string strStart, string strEnd);
 
+        public string GetGameHashNamefromItemandGame(string Item, string Game);
 
 
+        public string CleanMe(string cleanme);
     }
 }

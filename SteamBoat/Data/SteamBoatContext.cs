@@ -21,6 +21,8 @@ namespace SteamBoat.Data
 
         public DbSet<SteamBoat.Models.ItemForSale> ItemsForSale { get; set; }
 
+        public DbSet<SteamBoat.Models.Transaction> Transactions { get; set; }
+
     }
 }
 

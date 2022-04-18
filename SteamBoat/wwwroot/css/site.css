@@ -96,3 +96,7 @@ a:active, a:visited {
 table.dataTable tbody td {
     vertical-align: middle;
 }
+
+.highlight {
+    background-color: #f5ff00;
+}

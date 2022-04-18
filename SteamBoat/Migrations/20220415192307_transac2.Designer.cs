@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220415192307_transac2")]
+    partial class transac2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,18 +51,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Activity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Ave_buy")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Ave_profic_pc")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Ave_profit")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Ave_sell")
                         .HasColumnType("int");
 
                     b.Property<int>("Fruit")
@@ -124,24 +114,6 @@ namespace SteamBoat.Migrations
 
                     b.Property<string>("sells_html")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("total_buys")
-                        .HasColumnType("int");
-
-                    b.Property<int>("total_buys_sum_amount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("total_profit")
-                        .HasColumnType("int");
-
-                    b.Property<int>("total_profit_including_stock")
-                        .HasColumnType("int");
-
-                    b.Property<int>("total_sales")
-                        .HasColumnType("int");
-
-                    b.Property<int>("total_sales_sum_amount")
-                        .HasColumnType("int");
 
                     b.HasKey("hash_name_key");
 
@@ -231,15 +203,11 @@ namespace SteamBoat.Migrations
                     b.Property<string>("sale_price_after_fees")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(1)");
-
                     b.HasKey("Tran_Id");
 
                     b.HasIndex("Game_hash_name_key");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transaction");
                 });
 
             modelBuilder.Entity("SteamBoat.Models.FeederUrl", b =>

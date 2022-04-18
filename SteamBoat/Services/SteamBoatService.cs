@@ -220,7 +220,7 @@ namespace SteamBoat.Services
                 }
                 else
                 {
-                    itemGrab = _ContentGrabberService.GrabMe(itemUrl + hash_name, Freshness.AnyCached);
+                    itemGrab = _ContentGrabberService.GrabMe(itemUrl + hash_name.Replace("#", "%23"), Freshness.AnyCached);
                 }
 
 
@@ -246,7 +246,9 @@ namespace SteamBoat.Services
                 }
                 catch 
                 {
-                    myNewItem.Name = "Unknown";
+                    //non steam game has differnt crumbs
+                    myNewItem.Name = crumbItems[3].InnerText;
+                    myNewItem.Game = crumbItems[1].InnerText;
                 }
 
                 //get number for sale
@@ -291,10 +293,13 @@ namespace SteamBoat.Services
         public string LHFandGaps(Freshness freshness)
         {
         
-            var myItems = _context.Items.OrderByDescending(o => o.StartingPrice).ToList();
+            var myItems = _context.Items.Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
             foreach (var myItem in myItems.ToList()) 
             {
-
+                if (myItem.ItemsForSale.Count > 0) 
+                {
+                
+                };
                 UpdateStatsforItem(myItem, freshness);
 
                 _context.SaveChanges();
@@ -308,6 +313,7 @@ namespace SteamBoat.Services
 
         string UpdateStatsforItem(Item myItem, Freshness freshness) 
         {
+            
             var myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
 
 
@@ -327,7 +333,72 @@ namespace SteamBoat.Services
             var buy_order_count = obj_linq.Where(k => k.Key == "buy_order_count").FirstOrDefault().Value;
             var sell_order_count = obj_linq.Where(k => k.Key == "sell_order_count").FirstOrDefault().Value;
 
+
+
+            var buysOTable = obj_linq.Where(k => k.Key == "buy_order_table").FirstOrDefault().Value;
+            var buytable = "";
+            int cnt = 0;
+            foreach (var buyrows in buysOTable) 
+            {
+                if (cnt < 5)
+                {
+                    
+                    var price = buyrows["price"];
+                    var quant = buyrows["quantity"];
+
+                    if ((string)price == myItem.bid_price_in_pound) 
+                    {
+
+                        price = "<span class=\"highlight\">" + price + "</span>";
+                    }
+
+                    buytable = buytable + price + " - " + quant + "<br />";
+                    cnt++;
+                }
+            
+            }
+
+            var sellsOTable = obj_linq.Where(k => k.Key == "sell_order_table").FirstOrDefault().Value;
+            var selltable = "";
+            cnt = 0;
+            foreach (var sellrows in sellsOTable)
+            {
+                if (cnt < 5)
+                {
+
+                    var price = sellrows["price"];
+                    var quant = sellrows["quantity"];
+
+                    var mysaleitemchecklist = "";
+
+                    if (myItem.ItemsForSale.Count > 0)
+                    {
+
+                    };
+                    foreach (var mysaleitem in myItem.ItemsForSale) 
+                    {
+                        mysaleitemchecklist = mysaleitemchecklist + mysaleitem.sell_price_without_fees;
+                    }
+
+
+                    if (mysaleitemchecklist.Contains((string)price))
+                    {
+
+                        price = "<span class=\"highlight\">" + price + "</span>";
+                    }
+
+                    selltable = selltable + price + " - " + quant + "<br />";
+                    cnt++;
+                }
+
+            }
+
+
+
+            //Console.WriteLine(buytable);
+            //Console.WriteLine(selltable);
             //var x = ((JValue)buys[0][0]).Value.GetType();
+
 
             double next_max_buy_price = 0;
             double next_min_sell_price = 0;
@@ -374,6 +445,8 @@ namespace SteamBoat.Services
 
             myItem.Fruit = (int)lhf;
             myItem.Gap = (int)gap;
+            myItem.sells_html = selltable;
+            myItem.buys_html = buytable;
             return "OK";
         }
 
@@ -417,6 +490,24 @@ namespace SteamBoat.Services
             float? cent = float.Parse(pound);
             cent = cent * exrate;
             return Convert.ToInt32(cent);
+
+
+
+
+
+
+
+        }
+
+        public string CleanMe(string cleanme)
+
+        {
+
+            cleanme = cleanme.Replace("\n", "");
+            cleanme = cleanme.Replace("\r", "");
+            cleanme = cleanme.Replace("\t", "");
+            
+            return cleanme;
 
 
 
@@ -504,6 +595,124 @@ namespace SteamBoat.Services
 
         }
 
+        public string UpdateTrans()
+        
+        {
+
+            var items = _context.Items.Include("Transactions").ToList();
+
+            foreach (var item in items) 
+            {
+
+                var sale_count = item.Transactions.Where(t => t.type.ToString() == "-").Count();
+                var buy_count = item.Transactions.Where(t => t.type.ToString() == "+").Count();
+
+                if (sale_count > buy_count) 
+                {
+
+                    Console.WriteLine("ERROR !!! SOLD MORE THAN BOUGHT!!!!! DELETING" + item.Game + " buy: " + buy_count.ToString() + " | sale: " + sale_count.ToString());
+                    var delthesetrans = _context.Transactions.Where(i => i.Game_hash_name_key == item.hash_name_key).ToList();
+                    foreach(var t in delthesetrans) 
+                    {
+                        _context.Transactions.Remove(t);
+                        _context.SaveChanges();
+                    
+                    }
+
+                }
+
+
+                item.total_buys = buy_count;
+                item.total_sales = sale_count;
+
+
+                var all_buys = item.Transactions.Where(t => t.type == '+').OrderByDescending(o => o.DateT).ToList();
+                var all_sells = item.Transactions.Where(t => t.type == '-').OrderByDescending(o => o.DateT).ToList();
+
+                var all_buys_amount = 0;
+                foreach (var buy in all_buys) 
+                {
+                    all_buys_amount = all_buys_amount + buy.int_sale_price_after_fees;
+                }
+                item.total_buys_sum_amount = all_buys_amount;
+                if (all_buys.Count() > 0)
+                {
+                    item.Ave_buy = (int)((double)all_buys_amount / (double)all_buys.Count());
+                }
+                else 
+                {
+                    item.Ave_buy = 0;
+                }
+
+                var all_sells_amount = 0;
+                foreach (var sale in all_sells)
+                {
+                    all_sells_amount = all_sells_amount + sale.int_sale_price_after_fees;
+                }
+                item.total_sales_sum_amount = all_sells_amount;
+                if (all_sells.Count() > 0)
+                {
+                    item.Ave_sell = (int)((double)all_sells_amount / (double)all_sells.Count());
+                }
+                else
+                {
+                    item.Ave_sell = 0;
+                }
+
+                if (item.Ave_sell > 0)
+                {
+                    // PROFIT
+                    item.Ave_profic_pc = (int)(((double)item.Ave_sell - (double)item.Ave_buy) / (double)item.Ave_sell * 100);
+                    item.Ave_profit = item.Ave_sell - item.Ave_buy;
+
+                }
+                else 
+                {
+                    item.Ave_profit = 0;
+                }
+
+                if (all_sells.Count() > 0)
+                {
+                    item.total_profit = all_sells_amount - all_buys_amount;
+                }
+                else 
+                {
+                    item.total_profit = 0;
+                }
+
+               // if (item.item_nameid == "176293912")
+               //     {
+               // 
+               // }
+
+                //get stock at sell price to calculate profit with stock
+                //DOESNT WORKJ BECASUE NOT ALL ITEMS ARE ON SALE YET
+                //var stock = _context.ItemsForSale.Where(i => i.Game_hash_name_key == item.hash_name_key).ToList();
+                //foreach(var myStock in stock)
+                // {
+                //
+                //     item.total_profit_including_stock = item.total_profit_including_stock + myStock.sale_price_after_fees;
+                // }
+
+                    //USE AVERAGE PRICe INSTEAD
+                item.total_profit_including_stock = item.total_profit;
+                var total_in_stock = item.total_buys - item.total_sales;
+
+                item.total_profit_including_stock = item.total_profit_including_stock + (total_in_stock * item.Ave_buy);
+
+
+
+
+                //Console.WriteLine("buy: " + buy_count.ToString() + " | sale: " + sale_count.ToString());
+
+
+            }
+
+            _context.SaveChanges();
+
+            return "OK";
+        
+        }
 
         //remove all bids before updating them
         public string ClearAllBids()
@@ -538,18 +747,51 @@ namespace SteamBoat.Services
 
         }
 
-        public string AddSellListing(string hash_name, int sell_price_after_fees, int int_sell_price_without_fees) 
+        public string AddSellListing(string hash_name, int sell_price_after_fees, int int_sell_price_without_fees, string sell_price_without_fees) 
         {
 
             var newSaleitem = new ItemForSale();
             newSaleitem.Game_hash_name_key = hash_name;
             newSaleitem.sale_price_after_fees = sell_price_after_fees;
             newSaleitem.sale_price = int_sell_price_without_fees;
+            newSaleitem.sell_price_without_fees = sell_price_without_fees;
             _context.ItemsForSale.Add(newSaleitem);
             _context.SaveChanges();
             return "OK";
 
         }
 
+        public string GetGameHashNamefromItemandGame(string Item, string Game) 
+        {
+
+            Game = Game.Replace(" Foil Trading Card", "");
+            Game = Game.Replace(" Rare Emoticon", "");
+            Game = Game.Replace(" Trading Card", "");
+            Game = Game.Replace(" (Trading Card)", "");
+            Game = Game.Replace(": Definitive Edition", "");
+            
+
+
+            var item = _context.Items.Where(i => i.Name == Item).Where(g => g.Game.Contains(Game)).SingleOrDefault();
+            if (item != null) 
+            {
+                return item.hash_name_key;
+            }
+
+            //attempt 2
+            Game = Game.Replace(" & ", " &amp; ");
+            item = _context.Items.Where(i => i.Name == Item).Where(g => g.Game.Contains(Game)).SingleOrDefault();
+            if (item != null)
+            {
+                return item.hash_name_key;
+            }
+
+
+
+            return null;
+        
+
+
+        }
     }
 }

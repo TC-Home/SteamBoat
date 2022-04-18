@@ -38,7 +38,9 @@
             <th>
                 My Bid
             </th>
-          
+            <th>
+                All Bids
+            </th>
 
         </tr>
     </thead>
@@ -149,7 +151,14 @@
             <td class="@bidcss">
                 @Html.DisplayFor(modelItem => item.bid_price)
             </td>
-         
+         <td>
+             <table>
+                 <tr>
+                     <td>@Html.Raw(item.buys_html)</td>
+                     <td>@Html.Raw(item.sells_html)</td>
+                 </tr>
+             </table>
+         </td>
       
         </tr>
 }

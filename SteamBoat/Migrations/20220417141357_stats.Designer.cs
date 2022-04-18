@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220417141357_stats")]
+    partial class stats
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -128,9 +130,6 @@ namespace SteamBoat.Migrations
                     b.Property<int>("total_buys")
                         .HasColumnType("int");
 
-                    b.Property<int>("total_buys_sum_amount")
-                        .HasColumnType("int");
-
                     b.Property<int>("total_profit")
                         .HasColumnType("int");
 
@@ -138,9 +137,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("total_sales")
-                        .HasColumnType("int");
-
-                    b.Property<int>("total_sales_sum_amount")
                         .HasColumnType("int");
 
                     b.HasKey("hash_name_key");

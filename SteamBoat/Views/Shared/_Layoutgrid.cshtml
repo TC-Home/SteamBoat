@@ -34,7 +34,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Domission" asp-route-id="1" asp-route-grab="true">Mission 1 (fresh)</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Domission" asp-route-id="2" asp-route-grab="true">Mission 2 (fresh)</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Domission" asp-route-id="1002" asp-route-grab="false">Mission 1002 (use cache if any)</a>
                         </li>
                          <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="LHF" asp-route-grab="true">LHF(grab)</a>
@@ -58,7 +58,13 @@
                           <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="CheckSalePrices">CSP</a>
                         </li>
-                        
+                            <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadHistory">Read History</a>
+                        </li>
+                       
+                            <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="UpdateTrans">Update Trans</a>
+                        </li>
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
