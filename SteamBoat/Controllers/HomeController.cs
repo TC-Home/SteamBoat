@@ -117,7 +117,7 @@ namespace SteamBoat.Controllers
 
             }
 
-        public IActionResult ReadBuyAndSellOrders() 
+        public IActionResult ReadBuyOrders() 
         {
             _SteamBoatService.ClearAllBids();
 
@@ -138,6 +138,7 @@ namespace SteamBoat.Controllers
             {
                 foreach (var buyorder in buyorders)
                 {
+                    
                     //var x = buyorder.Descendants("a").ToList();
                     var market_listing_item_name = buyorder.Descendants("a").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_name_link").SingleOrDefault();
                     var Name = market_listing_item_name.InnerText;
@@ -151,16 +152,72 @@ namespace SteamBoat.Controllers
                     var imageURLFULL = buyorder.Descendants("img").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_img").SingleOrDefault();
                     var imageURL = imageURLFULL.GetAttributeValue("src", "");
                     imageURL = imageURL.Replace("/38fx38f", "").Replace("https://community.cloudflare.steamstatic.com/economy/image/", "");
+                    imageURL = imageURL.Replace("https://community.akamai.steamstatic.com/economy/image/", "");
+                    if (imageURL.Contains("https:")) 
+                    {
+                        Console.WriteLine("ERROR : This should just be image code, no http : " + imageURL);
+                    }
                     missionReportVM unused = new missionReportVM();
+                    if (bid_price == 37) 
+                    { 
+                    }
                     var addResult = _SteamBoatService.CreateUpdateItemPage(hash_name, Link, unused, 0, imageURL, Link);
                     var myitem = _SteamBoatService.UpdateBidPrice(hash_name, bid_quant, bid_price, bid_price_in_pound);
 
 
                 }
             }
-            //* SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS * SELLS 
+
+
+            
+            var items = _SteamBoatService.GetAllItems();
+            var bids = items.Where(b => b.bid_price != 0).ToList();
+            return View("/views/home/items.cshtml", bids);
+
+
+
+        }
+
+
+        public IActionResult ReadSellOrders() 
+        {
             _SteamBoatService.ClearAllSales();
-            var sellorders = htmlBody.SelectNodes("//div[contains(@id, 'mylisting_')]");
+            var fileloc = Path.Combine(Directory.GetCurrentDirectory(), "downloads//Selling", "download.json");
+            
+
+            string myHistory = System.IO.File.ReadAllText(fileloc);
+           
+
+            var myJSOObject = JObject.Parse(myHistory);
+            var arrayofitems = myJSOObject.SelectToken("results_html");
+
+
+
+            var combined = arrayofitems.ToString();
+
+            //THIS is optiopnal seconf page
+            try {
+                var fileloc2 = Path.Combine(Directory.GetCurrentDirectory(), "downloads//Selling", "download2.json");
+                string myHistory2 = System.IO.File.ReadAllText(fileloc2);
+                var myJSOObject2 = JObject.Parse(myHistory2);
+                var arrayofitems2 = myJSOObject2.SelectToken("results_html");
+                combined = combined + arrayofitems2.ToString(); }
+            catch
+            {
+                Console.WriteLine("only one page of sell listings (less than 100)");
+
+            }
+
+
+
+
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(combined);
+
+            //var mySelling = htmlDoc.DocumentNode.SelectNodes("//div[contains(@id, 'history_row_')]");
+
+
+            var sellorders = htmlDoc.DocumentNode.SelectNodes("//div[contains(@id, 'mylisting_')]");
             foreach (var sellorder in sellorders)
             {
                 //var x = buyorder.Descendants("a").ToList();
@@ -174,12 +231,17 @@ namespace SteamBoat.Controllers
                 var int_sell_price_after_fees = _SteamBoatService.poundtocent(sell_price_after_fees);
 
                 var sell_price_without_fees = sell_price_without_and_with_fees.Split("(")[0];
-                var int_sell_price_without_fees =  _SteamBoatService.poundtocent(sell_price_without_fees);
+                var int_sell_price_without_fees = _SteamBoatService.poundtocent(sell_price_without_fees);
 
 
                 var imageURLFULL = sellorder.Descendants("img").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_img").SingleOrDefault();
                 var imageURL = imageURLFULL.GetAttributeValue("src", "");
                 imageURL = imageURL.Replace("/38fx38f", "").Replace("https://community.cloudflare.steamstatic.com/economy/image/", "");
+                imageURL = imageURL.Replace("https://community.akamai.steamstatic.com/economy/image/", "");
+                if (imageURL.Contains("https:"))
+                {
+                    Console.WriteLine("ERROR : This should just be image code, no http : " + imageURL);
+                }
                 missionReportVM unused = new missionReportVM();
                 var addResult = _SteamBoatService.CreateUpdateItemPage(hash_name, Link, unused, 0, imageURL, Link);
                 var myitem = _SteamBoatService.AddSellListing(hash_name, int_sell_price_after_fees, int_sell_price_without_fees, sell_price_without_fees);
@@ -187,16 +249,9 @@ namespace SteamBoat.Controllers
 
             }
 
+            return Content("OK");
 
-
-
-            var items = _SteamBoatService.GetAllItems();
-            var bids = items.Where(b => b.bid_price != 0).ToList();
-            return View("/views/home/items.cshtml", bids);
-
-
-
-        }
+            }
 
         public IActionResult agility()
         {
@@ -313,13 +368,6 @@ namespace SteamBoat.Controllers
             return View(items);
         }
 
-        public IActionResult UpdateTrans()
-        {
-
-            _SteamBoatService.UpdateTrans();
-            return Content("OK");
-            
-        }
 
 
         public IActionResult ItemsGold()
@@ -435,7 +483,7 @@ namespace SteamBoat.Controllers
             }
 
 
-                var htmlDoc = new HtmlDocument();
+            var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(arrayofitems.ToString());
 
 
@@ -553,6 +601,8 @@ namespace SteamBoat.Controllers
             }
 
 
+
+            _SteamBoatService.UpdateTrans();
             return Content("OK");
 
 

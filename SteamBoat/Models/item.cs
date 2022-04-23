@@ -67,6 +67,8 @@ namespace SteamBoat.Models
 
         public int total_profit_including_stock { get; set; }
 
+        public int total_profit_sales_only { get; set; }
+
         public int Ave_buy { get; set; }
 
         public int Ave_sell { get; set; }

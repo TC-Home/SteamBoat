@@ -97,6 +97,18 @@ table.dataTable tbody td {
     vertical-align: middle;
 }
 
-.highlight {
-    background-color: #f5ff00;
+.highlight0 {
+    background-color: #00ff00;
+}
+.highlight1 {
+    background-color: #9fff00;
+}
+.highlight2 {
+    background-color: #fcff00;
+}
+.highlight3 {
+    background-color: #ff8d00;
+}
+.highlight4 {
+    background-color: #ff3700;
 }

@@ -47,7 +47,10 @@
                         </li>
                
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadBuyAndSellOrders" asp-route-grab="false">Read Buy/Sell Orders</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadBuyOrders" asp-route-grab="false">Read Buy Orders</a>
+                        </li>
+                           <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadSellOrders" asp-route-grab="false">Read Sell Orders</a>
                         </li>
                             <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Items" asp-route-grab="false">Items</a>
@@ -59,12 +62,10 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="CheckSalePrices">CSP</a>
                         </li>
                             <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadHistory">Read History</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ReadHistory">Read History (transactions)</a>
                         </li>
                        
-                            <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="UpdateTrans">Update Trans</a>
-                        </li>
+                 
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>

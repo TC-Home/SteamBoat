@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="downloads\" />
+    <Folder Include="downloads\Selling\" />
     <Folder Include="wwwroot\datatables\js\" />
     <Folder Include="wwwroot\itemimages\" />
   </ItemGroup>

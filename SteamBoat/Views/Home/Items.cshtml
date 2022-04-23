@@ -19,11 +19,15 @@
                 @Html.DisplayNameFor(model => model.Game)
             </th>
                 <th>
-                @Html.DisplayNameFor(model => model.Fruit)
+                @Html.DisplayNameFor(model => model.Ave_profit)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StartingPrice)
+               <th>
+                @Html.DisplayNameFor(model => model.total_sales)
             </th>
+
+         
+
+          
             <th>
                 @Html.DisplayNameFor(model => model.Activity)
             </th>
@@ -31,6 +35,8 @@
        
             <th>
                 @Html.DisplayNameFor(model => model.Gap)
+            </th>  <th>
+                @Html.DisplayNameFor(model => model.StartingPrice)
             </th>
                 <th>
                 Top Bid
@@ -117,26 +123,27 @@
 
                 <tr>
             <td>
-                <a href="@item.ItemPageURL" target="_blank">
-                <img src="/itemimages/@{@item.hash_name_key.Replace(":"," ")}.png" style="height: 60px;" />
+                <a href="@item.ItemPageURL" target="_new">
+                <img src="/itemimages/@{@item.hash_name_key.Replace(":"," ").Replace("\""," ").Replace("|"," ")}.png" />
             </a>
             </td>
                 <td>
-                <a href="@item.ItemPageURL" target="_blank">
+                <a href="@item.ItemPageURL" target="_new">
                 @Html.DisplayFor(modelItem => item.Name)
                 </a>
             </td>
               <td>
-                <a href="@gamesearch" target="_blank">
+                <a href="@gamesearch" target="_new">
                 @Html.DisplayFor(modelItem => item.Game)
                 </a>
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Fruit)
+            <td style="background-color: rgb(@ConColour(-30,30,0,item.Ave_profit,false)">
+                @Html.DisplayFor(modelItem => item.Ave_profit)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartingPrice)
+            <td style="background-color: rgb(@ConColour(0,20,0,item.total_sales,false)">
+                @Html.DisplayFor(modelItem => item.total_sales)
             </td>
+       
              <td style="@activitycss">
                 @Html.DisplayFor(modelItem => item.Activity)
             </td>
@@ -144,6 +151,8 @@
         
             <td style="@gapcss">
                 @Html.DisplayFor(modelItem => item.Gap)
+            </td>     <td>
+                @Html.DisplayFor(modelItem => item.StartingPrice)
             </td>
                <td>
                 @Html.DisplayFor(modelItem => item.max_buy_price)
@@ -164,3 +173,98 @@
 }
     </tbody>
 </table>
+@functions
+{
+
+    private string ConColour( int Min, int Max, int Flip, int Value, bool Invert) 
+        {
+            if (Value < Min) 
+            {
+
+                Value = Min;
+            
+            }
+            if (Value > Max) 
+            {
+
+                Value = Max;
+            }
+
+
+            //fix for negative mins
+            if (Min < 0) 
+            {
+                var minus = (Min * -1);
+                Min = Min + minus;
+                Max = Max + minus;
+                Value = Value + minus;
+                Flip = Flip + minus;
+                    
+            
+            }
+        if (Value == Flip) { return "255,255,255"; }
+
+
+
+            double c1range = Flip - Min;
+            double c2range = Max - Flip;
+            double c1unit = 230 / c1range;
+            double c2unit = 230 / c2range;
+            int Tint = 0;
+
+            if (Value < Flip)
+            {
+                Tint = (int)((Value) * c1unit);
+
+
+                if (Invert == false)
+                {
+
+                    return Red(Tint);
+                }
+                else
+                {
+
+                    return Green(Tint);
+                
+                }
+
+
+            }
+            else 
+            {
+                Tint = (int)((Value-Flip) * c2unit);
+                if (Invert == false)
+                {
+                    return Green(230-Tint);
+
+                }
+                else
+                {
+                    return Red(230-Tint);
+                    
+
+                }
+
+            }
+
+
+            
+        }
+
+
+        public string Green(int Tint) 
+        {
+
+            return (Tint).ToString() + ",255," + (Tint).ToString();
+        }
+
+
+        public string Red(int Tint)
+        {
+
+            return "255," + (Tint).ToString() + "," + (Tint).ToString();
+        }
+
+
+}

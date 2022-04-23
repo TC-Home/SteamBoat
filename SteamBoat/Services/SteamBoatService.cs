@@ -16,6 +16,7 @@ using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace SteamBoat.Services
 {
@@ -57,7 +58,7 @@ namespace SteamBoat.Services
 
             //we have a mission
             //Grap all the pages/jsons in the mission-feederurls
-            var myUrls = _context.FeederUrl.Where(u => u.MissionId == mymission.MissionId);
+            var myUrls = _context.FeederUrl.Where(u => u.MissionId == mymission.MissionId).OrderByDescending(o => o.FeederId);
 
             if (!myUrls.Any()) 
             {
@@ -199,9 +200,17 @@ namespace SteamBoat.Services
             if (myItem != null)
             {
                 Console.WriteLine("Already got item_nameid - got grabbing page");
+                Console.WriteLine("Checking we have thumb");
+                var gotthmb = File.Exists("wwwroot/itemimages/" + hash_name.Replace(":", " ") + ".png");
+                Console.WriteLine("got thumnb = " + gotthmb);
+
+                if (gotthmb == false) 
+                {
+                    SaveThumb(imageurl, myItem.hash_name_key);
+                }
                 //we have the item
                 //myItem.StartingPrice = sellprice;
-          
+
                 //_context.SaveChanges();
 
             }
@@ -257,7 +266,7 @@ namespace SteamBoat.Services
 
                 string trades = getBetween(itemGrab.HTML, "var line1=", "g_timePriceHistoryEarliest");
                 myNewItem.ItemPageURL = itemGrab.Url;
-               var tradescount = trades.Split("2022").Count();
+               var tradescount = trades.Split("2022").Count();               
                 myNewItem.Activity = tradescount;
 
                 myNewItem.ItemStatsURL = "https://steamcommunity.com/market/itemordershistogram?country=GB&language=english&currency=2&item_nameid=" + item_nameid + "&two_factor=0&norender=1";
@@ -265,14 +274,15 @@ namespace SteamBoat.Services
 
                 //GET THE THUMB
 
-                try 
-                {
-                    using (var client = new WebClient())
-                    {
-                        client.DownloadFile("https://community.cloudflare.steamstatic.com/economy/image/" + imageurl + "/100fx116f", "wwwroot/itemimages/" + hash_name.Replace(":", " ") + ".png");
-                    } 
-                }
-                catch { }
+                SaveThumb(imageurl, hash_name);
+                // try 
+                // {
+                //    using (var client = new WebClient())
+                //    {
+                //        client.DownloadFile("https://community.cloudflare.steamstatic.com/economy/image/" + imageurl + "/100fx116f", "wwwroot/itemimages/" + hash_name.Replace(":", " ") + ".png");
+                //    } 
+                // }
+                // catch { }
 
 
                 //UPDATE THE STATS ON THE NEW ITEM
@@ -289,6 +299,28 @@ namespace SteamBoat.Services
 
 
             return MissionReport;
+        }
+
+        String SaveThumb(string imageurl,string hash_name ) 
+        {
+            var result = "";
+            var THpath = "";
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    THpath = "https://community.cloudflare.steamstatic.com/economy/image/" + imageurl + "/100fx116f";
+                    client.DownloadFile(THpath, "wwwroot/itemimages/" + hash_name.Replace(":", " ").Replace("\"", " ").Replace("|", " ") + ".png");
+                    result = "OK";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ERROR GETTING THUMB : " + THpath);
+                Console.WriteLine("ERROR : " + ex.Message);
+                result = "FAIL";
+            }
+            return result;
         }
         public string LHFandGaps(Freshness freshness)
         {
@@ -311,9 +343,55 @@ namespace SteamBoat.Services
             return "OK";
         }
 
+        private string HighlightBuyOrder(JToken buysOTable, string bid_price, int adjuster) 
+        {
+            //tries to find the bid prioce in the table
+            //the adjuster lets you tweak bu a penny to see if you can find a match
+            //if adjuster = 99 then it gives up and returns the table wihotu a highlight
+            bool found_bid = false;
+            int cnt = 0;
+            var buytable = "";
+            foreach (var buyrows in buysOTable)
+            {
+                if (cnt < 5)
+                {
+
+                    var price = buyrows["price"];
+                    var quant = buyrows["quantity"];
+
+                    var matchme = (string)price;
+                    matchme = matchme.Replace("£0.0", "").Replace("£0.", "").Replace("£", "").Replace(".", "");
+                    string mybid = ((int.Parse(bid_price) + (int)adjuster)).ToString();
+                    if (matchme == mybid)
+                    {
+
+                        price = "<span class=\"highlight" + cnt + "\">" + price + "</span>";
+                        found_bid = true;
+                    }
+
+                    buytable = buytable + price + " - " + quant + "<br />";
+                    cnt++;
+                }
+
+            }
+            if (adjuster == -99) 
+            {
+                return buytable;
+            }
+            if (found_bid == false)
+            {
+                return "FAIL";
+            }
+            return buytable;
+            
+        }
         string UpdateStatsforItem(Item myItem, Freshness freshness) 
         {
-            
+           // if (myItem.Name.Contains("Apex")) 
+           // { 
+          //  
+          //  }
+
             var myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
 
 
@@ -332,35 +410,40 @@ namespace SteamBoat.Services
             var sells = obj_linq.Where(k => k.Key == "sell_order_graph").FirstOrDefault().Value;
             var buy_order_count = obj_linq.Where(k => k.Key == "buy_order_count").FirstOrDefault().Value;
             var sell_order_count = obj_linq.Where(k => k.Key == "sell_order_count").FirstOrDefault().Value;
-
-
-
+            
             var buysOTable = obj_linq.Where(k => k.Key == "buy_order_table").FirstOrDefault().Value;
-            var buytable = "";
-            int cnt = 0;
-            foreach (var buyrows in buysOTable) 
-            {
-                if (cnt < 5)
+
+            string buytable = "";
+
+            if (myItem.bid_price != 0) {
+
+                buytable = HighlightBuyOrder(buysOTable, myItem.bid_price.ToString(), 0);
+
+                if (buytable == "FAIL") 
                 {
+                    buytable = HighlightBuyOrder(buysOTable, myItem.bid_price.ToString(), -1);
+                }
+                if (buytable == "FAIL")
+                {
+                    buytable = HighlightBuyOrder(buysOTable, myItem.bid_price.ToString(), 1);
+                }
+                if (buytable == "FAIL")
+                {
+                    buytable = HighlightBuyOrder(buysOTable, myItem.bid_price.ToString(), -99);
+                }
+
+
+            }
+            else {
+
+                buytable = HighlightBuyOrder(buysOTable, myItem.bid_price.ToString(), -99);
                     
-                    var price = buyrows["price"];
-                    var quant = buyrows["quantity"];
-
-                    if ((string)price == myItem.bid_price_in_pound) 
-                    {
-
-                        price = "<span class=\"highlight\">" + price + "</span>";
                     }
 
-                    buytable = buytable + price + " - " + quant + "<br />";
-                    cnt++;
-                }
             
-            }
-
             var sellsOTable = obj_linq.Where(k => k.Key == "sell_order_table").FirstOrDefault().Value;
             var selltable = "";
-            cnt = 0;
+            var cnt = 0;
             foreach (var sellrows in sellsOTable)
             {
                 if (cnt < 5)
@@ -384,7 +467,7 @@ namespace SteamBoat.Services
                     if (mysaleitemchecklist.Contains((string)price))
                     {
 
-                        price = "<span class=\"highlight\">" + price + "</span>";
+                        price = "<span class=\"highlight" + cnt + "\">" + price + "</span>";
                     }
 
                     selltable = selltable + price + " - " + quant + "<br />";
@@ -453,14 +536,14 @@ namespace SteamBoat.Services
         public List<Item> GetLHFS(int lowest = 10) 
         {
 
-            var myLHFs = _context.Items.Where(w => w.Fruit > lowest).Where(a => a.Activity > 70).OrderByDescending(o => o.Fruit).ToList();
+            var myLHFs = _context.Items.Where(w => w.Fruit > lowest).Where(a => a.Activity > 40).OrderByDescending(o => o.Fruit).ToList();
             return myLHFs;
         
         }
         public List<Item> GetGaps(int lowest = 10)
         {
 
-            var myGaps = _context.Items.Where(w => w.Gap > lowest).Where(a => a.Activity > 70).OrderByDescending(o => o.Gap).ToList();
+            var myGaps = _context.Items.Where(w => w.Gap > lowest).Where(a => a.Activity > 40).OrderByDescending(o => o.Gap).ToList();
             return myGaps;
 
         }
@@ -621,13 +704,15 @@ namespace SteamBoat.Services
 
                 }
 
+                //used for testing
+                var filterdate = "18/04/2092";
 
-                item.total_buys = buy_count;
-                item.total_sales = sale_count;
+                var all_buys = item.Transactions.Where(t => t.type == '+').Where(d => d.DateT < DateTime.Parse(filterdate)).OrderByDescending(o => o.DateT).ToList();
+                var all_sells = item.Transactions.Where(t => t.type == '-').Where(d => d.DateT < DateTime.Parse(filterdate)).OrderByDescending(o => o.DateT).ToList();
 
 
-                var all_buys = item.Transactions.Where(t => t.type == '+').OrderByDescending(o => o.DateT).ToList();
-                var all_sells = item.Transactions.Where(t => t.type == '-').OrderByDescending(o => o.DateT).ToList();
+                item.total_buys = all_buys.Count();
+                item.total_sales = all_sells.Count();
 
                 var all_buys_amount = 0;
                 foreach (var buy in all_buys) 
@@ -700,6 +785,17 @@ namespace SteamBoat.Services
 
                 item.total_profit_including_stock = item.total_profit_including_stock + (total_in_stock * item.Ave_buy);
 
+
+                //works out profits on sales only. ignore unsold purchases
+
+                int cnt = 0;
+                item.total_profit_sales_only = 0;
+                foreach (var sale in all_sells) 
+                {
+                    item.total_profit_sales_only = item.total_profit_sales_only + (sale.int_sale_price_after_fees - all_buys[cnt].int_sale_price_after_fees);
+                    cnt++;
+                
+                }
 
 
 
