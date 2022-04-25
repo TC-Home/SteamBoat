@@ -24,6 +24,8 @@ namespace SteamBoat.Models
 
         public string ItemStatsURL { get; set; }
 
+        public string ItemActivityURL { get; set; }
+
 
         [MaxLength(255)]
         public string Game { get; set; }
@@ -77,8 +79,19 @@ namespace SteamBoat.Models
 
         public int Ave_profic_pc { get; set; }
 
+        public int ActivityHistory { get; set; }
 
+        public int AH1 { get; set; }
+        public int AH2 { get; set; }
+        public int AH3 { get; set; }
+        public int AH4 { get; set; }
+        public int AH5 { get; set; }
+        public int AH6 { get; set; }
+        public int AH7 { get; set; }
+        public int AH8 { get; set; }
+        public int AH9 { get; set; }
 
+        public int AH10 { get; set; }
 
 
         [ForeignKey("Game_hash_name_key")]

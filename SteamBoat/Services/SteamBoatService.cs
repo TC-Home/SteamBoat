@@ -343,6 +343,109 @@ namespace SteamBoat.Services
             return "OK";
         }
 
+        public string ActivityUpdateAll(bool usedayofweek) 
+        {
+            //loops through all items to update activity stats
+
+            // use day of week, updates a seventh of the total items based on day of week
+            
+            //check all items have an activity url
+            var allitems = _context.Items.ToList();
+
+
+            if (usedayofweek == false)
+            {
+                //do then all
+                foreach (var item in allitems)
+                {
+
+                    //update activity for single item
+                    ActivityUpdateSingle(item);
+
+
+                }
+            }
+            else 
+            {
+                //do a seveth of the total to avoid spamming
+                //the seventh selectred are based on the day of tyhe week
+                int dayNumber = (int)DateTime.Now.DayOfWeek;
+                int cnt = 0;
+                int mod = 7;
+                int tot = 0;
+
+                foreach (var my7item in allitems.Skip(dayNumber))
+                {
+
+                    if (cnt % mod == 0)
+                    {
+                    //    ActivityUpdateSingle(my7item);
+                        tot = tot + 1;
+                    }
+                    cnt = cnt + 1;
+                    
+
+
+                }
+                Console.WriteLine("FINISHED");
+                Console.WriteLine("Used day of week filtering. did " + tot.ToString());
+            }
+            _context.SaveChanges();
+            return "OK";
+        
+        }
+
+        public string ActivityUpdateSingle(Item item) 
+        {
+
+            var grabbedpage = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour24);
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(grabbedpage.HTML);
+            var pagecontents = htmlDoc.DocumentNode.SelectSingleNode("//*[@id='mainContents']");
+            HtmlNodeCollection childnodes = pagecontents.ChildNodes;
+
+
+            var ClassToGet = "market_listing_nav";
+            var crumbs = pagecontents.SelectNodes("//div[@class='" + ClassToGet + "']").First();
+            var crumbItems = crumbs.Descendants("#Text").ToArray();
+
+
+
+
+
+            // this section scrapped becasue the API didnt work unless user was logged in
+            if (1 == 2)
+            {
+                //THIS CODE IN INACCESSIBLE
+                if (item.ItemActivityURL == "" || item.ItemActivityURL == null)
+                {
+                    //trys to get the app id from the item url
+                    //parsed it to an int to make sure its numeric
+                    //if its not, raises an error
+                    try
+                    {
+                        var appid = int.Parse(item.ItemPageURL.Split("/")[5]);
+                        item.ItemActivityURL = "http://steamcommunity.com/market/pricehistory/?country=GB&currency=2&appid=";
+                        item.ItemActivityURL = item.ItemActivityURL + appid.ToString() + "&market_hash_name=" + item.hash_name_key;
+
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("ERROR: Couldnt get appif from item url");
+                        return "FAIL";
+                    }
+
+
+                }
+                
+
+
+               
+            }
+            return "OK";
+        }
+
         private string HighlightBuyOrder(JToken buysOTable, string bid_price, int adjuster) 
         {
             //tries to find the bid prioce in the table

@@ -253,6 +253,13 @@ namespace SteamBoat.Controllers
 
             }
 
+        public IActionResult UpdateActivity() 
+        {
+
+            _SteamBoatService.ActivityUpdateAll(true);
+            return Content("OK");
+        }
+
         public IActionResult agility()
         {
             //    var res = _ContentGrabberService.GrabMe(new GrabRequestVM() { Freshness = Freshness.Hour12.Id, Url = "https://feweek.co.uk/news/" });
