@@ -379,18 +379,18 @@ namespace SteamBoat.Services
 
                     if (cnt % mod == 0)
                     {
-                    //    ActivityUpdateSingle(my7item);
+                       ActivityUpdateSingle(my7item);
                         tot = tot + 1;
                     }
                     cnt = cnt + 1;
                     
 
-
+ _context.SaveChanges();
                 }
                 Console.WriteLine("FINISHED");
                 Console.WriteLine("Used day of week filtering. did " + tot.ToString());
             }
-            _context.SaveChanges();
+           
             return "OK";
         
         }
@@ -398,52 +398,145 @@ namespace SteamBoat.Services
         public string ActivityUpdateSingle(Item item) 
         {
 
-            var grabbedpage = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour24);
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(grabbedpage.HTML);
-            var pagecontents = htmlDoc.DocumentNode.SelectSingleNode("//*[@id='mainContents']");
-            HtmlNodeCollection childnodes = pagecontents.ChildNodes;
+            var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour24);
+            string trades = getBetween(itemGrab.HTML, "var line1=", "g_timePriceHistoryEarliest");
 
+            trades = trades.Replace("]];", "");
+            trades = trades.Replace("[[", "");
+            string[] myArray = trades.Split("],[");
 
-            var ClassToGet = "market_listing_nav";
-            var crumbs = pagecontents.SelectNodes("//div[@class='" + ClassToGet + "']").First();
-            var crumbItems = crumbs.Descendants("#Text").ToArray();
-
-
-
-
-
-            // this section scrapped becasue the API didnt work unless user was logged in
-            if (1 == 2)
+            var myModRecs = new List<Activityrec>();
+            foreach (var myArrayRec in myArray)
             {
-                //THIS CODE IN INACCESSIBLE
-                if (item.ItemActivityURL == "" || item.ItemActivityURL == null)
+                LoadArraytoMod(myArrayRec, myModRecs);
+            }
+
+            //CREATE A GROUPED ONJ
+            var myModRecsGroupedBYDATE = new List<Activityrec>();
+
+            var today = DateTime.Now.Date;
+            List<float> steps = new List<float>();
+            //ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY 
+            int Activity = 0;
+
+            for (int i = 0; i < 30; i++)
+            {
+
+                var searchdate = today.AddDays(i * -1);
+                var Allthisday = myModRecs.Where(w => w.myDate == searchdate).ToList();
+                var Cdate = new DateTime();
+                float CAmount = 0f;
+                float CNumber = 0f;
+                Cdate = searchdate;
+                if (Allthisday.Count > 0)
                 {
-                    //trys to get the app id from the item url
-                    //parsed it to an int to make sure its numeric
-                    //if its not, raises an error
-                    try
+                    
+                    foreach (var PartDate in Allthisday)
                     {
-                        var appid = int.Parse(item.ItemPageURL.Split("/")[5]);
-                        item.ItemActivityURL = "http://steamcommunity.com/market/pricehistory/?country=GB&currency=2&appid=";
-                        item.ItemActivityURL = item.ItemActivityURL + appid.ToString() + "&market_hash_name=" + item.hash_name_key;
-
-
+                        //STEPS THROUGH ALL ON SAME DAY
+                        
+                        CAmount = CAmount + PartDate.myAmount;
+                        CNumber = CNumber + (PartDate.myNumber * PartDate.myAmount);
+                        Activity = Activity + (int)PartDate.myAmount;
+                        Console.WriteLine(Cdate.ToShortDateString() + " " + PartDate.myAmount + " " + PartDate.myNumber);
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("ERROR: Couldnt get appif from item url");
-                        return "FAIL";
-                    }
-
+                    //Ave for day
+                    CNumber = CNumber / CAmount;
 
                 }
-                
-
-
-               
+                myModRecsGroupedBYDATE.Add(new Activityrec() { myDate = Cdate, myAmount = CAmount, myNumber = CNumber });
             }
+            //RECS ARE GROUPED BY DATE
+            //TRY GROUP BY BATCH
+
+            // BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH
+
+            //RECS ARE GROUPED BY DATE
+            //TRY GROUP BY BATCH
+
+            var batchsize = 3;
+            var batchcnt = 0;
+          
+            float BNumber = 0f;
+            int batchssofar = 0;
+
+            int batch_days_with_sales = 0;
+            var thisbatch = new Activityrec();
+            var batchedRecs = new List<Activitybatch>();
+            var AlldaysGrouped = myModRecs.ToList();
+            int maxbatchsize = 0;
+            float unitsize = 0;
+
+            for (int y = 0; y < 30; y++)
+            {
+                batchcnt++;
+                var searchdate = today.AddDays(y * -1);
+                var singleday = myModRecsGroupedBYDATE.Where(w => w.myDate == searchdate).SingleOrDefault();
+
+                if (singleday != null)
+                {
+                    if (singleday.myNumber != 0)
+                    {
+                        BNumber = BNumber + singleday.myNumber;
+                        batch_days_with_sales++;
+                    }
+
+                }
+                if (batchcnt == batchsize)
+                {
+                    batchssofar++;
+                    if (BNumber > 0 && batch_days_with_sales > 0)
+                    {
+                        batchedRecs.Add(new Activitybatch() { BatchNumber = batchssofar, BatchAV = (int)(BNumber / batch_days_with_sales) });
+                    }
+                    else 
+                    {
+                        batchedRecs.Add(new Activitybatch() { BatchNumber = batchssofar, BatchAV = 0 });
+
+                    }
+                    if ((int)(BNumber / batch_days_with_sales) > maxbatchsize) 
+                    {
+                        maxbatchsize = (int)(BNumber / batch_days_with_sales);
+                    }
+                    batchcnt = 0;
+                    BNumber = 0;
+                    batch_days_with_sales = 0;
+                }
+            }
+
+            unitsize = 100 / (float)maxbatchsize;
+
+            item.ActivityHistory = Activity;
+            item.AH1 = (int)(batchedRecs[9].BatchAV * unitsize);
+            item.AH2 = (int)(batchedRecs[8].BatchAV * unitsize);
+            item.AH3 = (int)(batchedRecs[7].BatchAV * unitsize);
+            item.AH4 = (int)(batchedRecs[6].BatchAV * unitsize);
+            item.AH5 = (int)(batchedRecs[5].BatchAV * unitsize);
+            item.AH6 = (int)(batchedRecs[4].BatchAV * unitsize);
+            item.AH7 = (int)(batchedRecs[3].BatchAV * unitsize);
+            item.AH8 = (int)(batchedRecs[2].BatchAV * unitsize);
+            item.AH9 = (int)(batchedRecs[1].BatchAV * unitsize);
+            item.AH10 = (int)(batchedRecs[0].BatchAV * unitsize);
+
+
             return "OK";
+        }
+
+        void LoadArraytoMod(string myArrayRec, List<Activityrec> myModRecs)
+        {
+            Activityrec myRec = new Activityrec();
+            string[] splits = myArrayRec.Split(",");
+            splits[0] = splits[0].Replace("\"", "").Substring(0, 11);
+            splits[2] = splits[2].Replace("\"", "");
+            myRec.myDate = DateTime.Parse(splits[0]);
+            decimal dec = Convert.ToDecimal(splits[1]);
+            //dec = .5M;
+            decimal dec2 = decimal.Round(dec * 100, 0, MidpointRounding.AwayFromZero);
+            string dec3 = dec2.ToString();
+            myRec.myAmount = int.Parse(splits[2]);
+            myRec.myNumber = int.Parse(dec3);
+            myModRecs.Add(myRec);
+
         }
 
         private string HighlightBuyOrder(JToken buysOTable, string bid_price, int adjuster) 
