@@ -266,8 +266,15 @@ namespace SteamBoat.Services
 
                 string trades = getBetween(itemGrab.HTML, "var line1=", "g_timePriceHistoryEarliest");
                 myNewItem.ItemPageURL = itemGrab.Url;
-               var tradescount = trades.Split("2022").Count();               
-                myNewItem.Activity = tradescount;
+             
+                //old ACTIVITY
+                //
+                //var tradescount = trades.Split("2022").Count();               
+                //myNewItem.Activity = tradescount;
+
+                //NEW ACTIVITY
+                ActivityUpdateSingle(myNewItem);
+
 
                 myNewItem.ItemStatsURL = "https://steamcommunity.com/market/itemordershistogram?country=GB&language=english&currency=2&item_nameid=" + item_nameid + "&two_factor=0&norender=1";
                 myNewItem.StartingPrice = sellprice;
@@ -356,12 +363,14 @@ namespace SteamBoat.Services
             if (usedayofweek == false)
             {
                 //do then all
-                foreach (var item in allitems)
+
+                //foreach (Item item in allitems.Where(w => w.ActivityHistory == 0).ToList())
+                foreach (var item in allitems.ToList())
                 {
 
                     //update activity for single item
                     ActivityUpdateSingle(item);
-
+                    _context.SaveChanges();
 
                 }
             }
@@ -504,20 +513,38 @@ namespace SteamBoat.Services
                 }
             }
 
-            unitsize = 100 / (float)maxbatchsize;
+            if (maxbatchsize == 0)
+            { 
+                item.Activity = 0;
+                item.AH1 = 0;
+                item.AH2 = 0;
+                item.AH3 = 0;
+                item.AH4 = 0;
+                item.AH5 = 0;
+                item.AH6 = 0;
+                item.AH7 = 0;
+                item.AH8 = 0;
+                item.AH9 = 0;
+                item.AH10 = 0;
 
-            item.ActivityHistory = Activity;
-            item.AH1 = (int)(batchedRecs[9].BatchAV * unitsize);
-            item.AH2 = (int)(batchedRecs[8].BatchAV * unitsize);
-            item.AH3 = (int)(batchedRecs[7].BatchAV * unitsize);
-            item.AH4 = (int)(batchedRecs[6].BatchAV * unitsize);
-            item.AH5 = (int)(batchedRecs[5].BatchAV * unitsize);
-            item.AH6 = (int)(batchedRecs[4].BatchAV * unitsize);
-            item.AH7 = (int)(batchedRecs[3].BatchAV * unitsize);
-            item.AH8 = (int)(batchedRecs[2].BatchAV * unitsize);
-            item.AH9 = (int)(batchedRecs[1].BatchAV * unitsize);
-            item.AH10 = (int)(batchedRecs[0].BatchAV * unitsize);
+            }
+            else
+            {
+                unitsize = 100 / (float)maxbatchsize;
 
+              
+                item.Activity = Activity;
+                item.AH1 = (int)(batchedRecs[9].BatchAV * unitsize);
+                item.AH2 = (int)(batchedRecs[8].BatchAV * unitsize);
+                item.AH3 = (int)(batchedRecs[7].BatchAV * unitsize);
+                item.AH4 = (int)(batchedRecs[6].BatchAV * unitsize);
+                item.AH5 = (int)(batchedRecs[5].BatchAV * unitsize);
+                item.AH6 = (int)(batchedRecs[4].BatchAV * unitsize);
+                item.AH7 = (int)(batchedRecs[3].BatchAV * unitsize);
+                item.AH8 = (int)(batchedRecs[2].BatchAV * unitsize);
+                item.AH9 = (int)(batchedRecs[1].BatchAV * unitsize);
+                item.AH10 = (int)(batchedRecs[0].BatchAV * unitsize);
+            }
 
             return "OK";
         }
@@ -581,7 +608,7 @@ namespace SteamBoat.Services
             return buytable;
             
         }
-        string UpdateStatsforItem(Item myItem, Freshness freshness) 
+        public string UpdateStatsforItem(Item myItem, Freshness freshness) 
         {
            // if (myItem.Name.Contains("Apex")) 
            // { 
@@ -640,13 +667,63 @@ namespace SteamBoat.Services
             var sellsOTable = obj_linq.Where(k => k.Key == "sell_order_table").FirstOrDefault().Value;
             var selltable = "";
             var cnt = 0;
+            myItem.bid1Price = 0;
+            myItem.bid1Quant = 0;
+            myItem.bid2Price = 0;
+            myItem.bid2Quant = 0;
+            myItem.bid3Price = 0;
+            myItem.bid3Quant = 0;
+            myItem.bid4Price = 0;
+            myItem.bid5Quant = 0;
+            myItem.bid5Price = 0;
+            myItem.bid5Quant = 0;
+
+
+
             foreach (var sellrows in sellsOTable)
             {
                 if (cnt < 5)
                 {
 
                     var price = sellrows["price"];
+                    int intprice = int.Parse(price.ToString().Replace("£0.0", "").Replace("£0.", "").Replace("£", "").Replace(".", ""));
                     var quant = sellrows["quantity"];
+                    int intquant = int.Parse(quant.ToString());
+
+
+                    if (cnt == 0) 
+                    {
+
+                        myItem.bid1Price = intprice;
+                        myItem.bid1Quant = intquant;
+                    }
+
+                    if (cnt == 1)
+                    {
+
+                        myItem.bid2Price = intprice;
+                        myItem.bid2Quant = intquant;
+                    }
+                    if (cnt == 2)
+                    {
+
+                        myItem.bid3Price = intprice;
+                        myItem.bid3Quant = intquant;
+                    }
+                    if (cnt == 3)
+                    {
+
+                        myItem.bid4Price = intprice;
+                        myItem.bid4Quant = intquant;
+                    }
+                    if (cnt == 4)
+                    {
+
+                        myItem.bid5Price = intprice;
+                        myItem.bid5Quant = intquant;
+                    }
+
+
 
                     var mysaleitemchecklist = "";
 
@@ -889,7 +966,7 @@ namespace SteamBoat.Services
                 if (sale_count > buy_count) 
                 {
 
-                    Console.WriteLine("ERROR !!! SOLD MORE THAN BOUGHT!!!!! DELETING" + item.Game + " buy: " + buy_count.ToString() + " | sale: " + sale_count.ToString());
+                    Console.WriteLine("ERROR !!! SOLD MORE THAN BOUGHT!!!!! DELETING" + item.Name + " : " + item.Game + " buy: " + buy_count.ToString() + " | sale: " + sale_count.ToString());
                     var delthesetrans = _context.Transactions.Where(i => i.Game_hash_name_key == item.hash_name_key).ToList();
                     foreach(var t in delthesetrans) 
                     {
@@ -1019,7 +1096,25 @@ namespace SteamBoat.Services
             _context.SaveChanges();
             return "OK";
         }
+        public string Excluder() 
+        {
+            int cnt = 0;
+            var gamestoexclude = _context.exclude.ToList();
+            foreach (var excludeme in gamestoexclude) 
+            {
+                var matches = _context.Items.Where(g => g.Game == excludeme.Game).ToList();
+                foreach (var delme in matches) 
+                {
+                    cnt++;
+                    _context.Items.Remove(delme);
 
+                }
+            
+            
+            }
+            _context.SaveChanges();
+            return "Delted " + cnt + " Titles";
+        }
         public string ClearAllSales() 
         {
             var items = _context.ItemsForSale.ToList();

@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220430222805_remove_unused_activity_url")]
+    partial class remove_unused_activity_url
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,6 +83,9 @@ namespace SteamBoat.Migrations
                     b.Property<int>("Activity")
                         .HasColumnType("int");
 
+                    b.Property<int>("ActivityHistory")
+                        .HasColumnType("int");
+
                     b.Property<int>("Ave_buy")
                         .HasColumnType("int");
 
@@ -123,42 +128,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("StartingPrice")
-                        .HasColumnType("int");
-
-                    b.Property<string>("autoBidStr")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("autoBidint")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid1Price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid1Quant")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid2Price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid2Quant")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid3Price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid3Quant")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid4Price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid4Quant")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid5Price")
-                        .HasColumnType("int");
-
-                    b.Property<int>("bid5Quant")
                         .HasColumnType("int");
 
                     b.Property<int>("bid_price")

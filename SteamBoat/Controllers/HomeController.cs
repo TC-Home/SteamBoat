@@ -111,13 +111,73 @@ namespace SteamBoat.Controllers
 
         public IActionResult Index()
         {
-            
+         //   return RedirectToAction("AutoBid");
+         //   var allItems = _context.Items.ToList();
+         //   foreach (var myItem in allItems) 
+         //   {
+         //       _SteamBoatService.UpdateStatsforItem(myItem, Freshness.AnyCached);
+         //   }
+
+           
+         //   _context.SaveChanges();
+
             return View();
 
 
             }
 
-        public IActionResult ReadBuyOrders() 
+        public IActionResult AutoBid()
+        {
+
+            int MinGap = 21;
+            int MinActivity = 25;
+            int MinStartingPrice = 65;
+            int MaxStartingPrice = 700;
+
+            var allItems = _context.Items.ToList();
+            foreach (var myItem in allItems)
+            {
+                if (myItem.Gap < MinGap || myItem.StartingPrice > MaxStartingPrice)
+                {
+                    //dont bid & cancell bids
+                    myItem.autoBidint = 0;
+                    myItem.autoBidStr = "Cancel Bids";
+
+                }
+                else 
+                {
+                    if (myItem.Activity > MinActivity && myItem.StartingPrice > MinStartingPrice) 
+                    {
+
+                        if (myItem.bid1Quant == 1)
+                        {
+                            myItem.autoBidint = myItem.bid1Price;
+                        }
+                        else 
+                        {
+                            myItem.autoBidint = myItem.bid1Price + 1;
+                        }
+
+                        decimal dec = Convert.ToDecimal(myItem.autoBidint);
+                        dec = dec / 100;
+                        myItem.autoBidStr = dec.ToString();
+
+                    }
+                
+                
+                }
+          
+
+            }
+
+            _context.SaveChanges();
+            return Content("OK");
+
+
+        }    
+
+
+                public IActionResult ReadBuyOrders() 
         {
             _SteamBoatService.ClearAllBids();
 
@@ -375,6 +435,12 @@ namespace SteamBoat.Controllers
             return View(items);
         }
 
+        public IActionResult Excluder()
+        {
+
+            return Content(_SteamBoatService.Excluder());
+            
+        }
 
 
         public IActionResult ItemsGold()

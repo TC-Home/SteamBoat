@@ -24,13 +24,13 @@ namespace SteamBoat.Models
 
         public string ItemStatsURL { get; set; }
 
-        public string ItemActivityURL { get; set; }
+       
 
 
         [MaxLength(255)]
         public string Game { get; set; }
         [MaxLength(255)]
-        public string  Name { get; set; }
+        public string Name { get; set; }
 
         public int NumForSale { get; set; }
         public int StartingPrice { get; set; }
@@ -79,7 +79,7 @@ namespace SteamBoat.Models
 
         public int Ave_profic_pc { get; set; }
 
-        public int ActivityHistory { get; set; }
+        
 
         public int AH1 { get; set; }
         public int AH2 { get; set; }
@@ -93,6 +93,22 @@ namespace SteamBoat.Models
 
         public int AH10 { get; set; }
 
+        public int bid1Price { get; set; }
+        public int bid1Quant { get; set; }
+        public int bid2Price { get; set; }
+        public int bid2Quant { get; set; }
+        public int bid3Price { get; set; }
+        public int bid3Quant { get; set; }
+        public int bid4Price { get; set; }
+        public int bid4Quant { get; set; }
+        public int bid5Price { get; set; }
+        public int bid5Quant { get; set; }
+
+        public int autoBidint { get; set; }
+        public string autoBidStr { get; set; }
+
+
+
 
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }
@@ -104,7 +120,7 @@ namespace SteamBoat.Models
     }
 
 
-    public class ItemForSale 
+    public class ItemForSale
     {
         [Key]
         public int Id { get; set; }
@@ -116,7 +132,7 @@ namespace SteamBoat.Models
         public int max_buy_bid { get; set; }
 
         public int max_buy_bid_diff { get; set; }
-        
+
         public int sale_price_diff { get; set; }
 
         public int sale_price_after_fees { get; set; }
@@ -145,4 +161,12 @@ namespace SteamBoat.Models
 
         public DateTime DateT { get; set; }
     }
+
+    public class exclude
+    {
+        [Key]
+        [MaxLength(255)]
+        public string Game { get; set; }
+
     }
+}

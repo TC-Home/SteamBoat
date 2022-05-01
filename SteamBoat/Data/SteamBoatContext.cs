@@ -23,6 +23,10 @@ namespace SteamBoat.Data
 
         public DbSet<SteamBoat.Models.Transaction> Transactions { get; set; }
 
+        public DbSet<SteamBoat.Models.exclude> exclude { get; set; }
+
+ 
+
     }
 }
 

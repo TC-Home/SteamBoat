@@ -57,7 +57,11 @@ namespace SteamBoat.Interfaces
 
         public string GetGameHashNamefromItemandGame(string Item, string Game);
 
+        public string Excluder();
 
         public string CleanMe(string cleanme);
+
+        public string UpdateStatsforItem(Item myItem, Freshness freshness);
+
     }
 }
