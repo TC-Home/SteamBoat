@@ -17,6 +17,8 @@ using System.Text.RegularExpressions;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium;
 
 namespace SteamBoat.Services
 {
@@ -691,7 +693,46 @@ namespace SteamBoat.Services
                     int intquant = int.Parse(quant.ToString());
 
 
-                    if (cnt == 0) 
+
+
+                    var mysaleitemchecklist = "";
+
+                    if (myItem.ItemsForSale.Count > 0)
+                    {
+
+                    };
+                    foreach (var mysaleitem in myItem.ItemsForSale) 
+                    {
+                        mysaleitemchecklist = mysaleitemchecklist + mysaleitem.sell_price_without_fees;
+                    }
+
+
+                    if (mysaleitemchecklist.Contains((string)price))
+                    {
+
+                        price = "<span class=\"highlight" + cnt + "\">" + price + "</span>";
+                    }
+
+                    selltable = selltable + price + " - " + quant + "<br />";
+                    cnt++;
+                }
+
+            }
+
+           cnt = 0;
+            //get the bids
+            foreach (var buyrows in buysOTable)
+            {
+                if (cnt < 5)
+                {
+
+                    var price = buyrows["price"];
+                    int intprice = int.Parse(price.ToString().Replace("£0.0", "").Replace("£0.", "").Replace("£", "").Replace(".", ""));
+                    var quant = buyrows["quantity"];
+                    int intquant = int.Parse(quant.ToString().Replace(",",""));
+
+
+                    if (cnt == 0)
                     {
 
                         myItem.bid1Price = intprice;
@@ -723,33 +764,11 @@ namespace SteamBoat.Services
                         myItem.bid5Quant = intquant;
                     }
 
-
-
-                    var mysaleitemchecklist = "";
-
-                    if (myItem.ItemsForSale.Count > 0)
-                    {
-
-                    };
-                    foreach (var mysaleitem in myItem.ItemsForSale) 
-                    {
-                        mysaleitemchecklist = mysaleitemchecklist + mysaleitem.sell_price_without_fees;
-                    }
-
-
-                    if (mysaleitemchecklist.Contains((string)price))
-                    {
-
-                        price = "<span class=\"highlight" + cnt + "\">" + price + "</span>";
-                    }
-
-                    selltable = selltable + price + " - " + quant + "<br />";
+                 
                     cnt++;
                 }
 
             }
-
-
 
             //Console.WriteLine(buytable);
             //Console.WriteLine(selltable);
@@ -798,9 +817,12 @@ namespace SteamBoat.Services
 
             var lhf = ((double)int_next_min_sell_price - (double)int_min_sell_price) / (double)int_next_min_sell_price * 100;
             var gap = ((double)int_min_sell_price - (double)int_max_buy_price) / (double)int_min_sell_price * 100;
+            var mygap = ((double)int_min_sell_price - (double)myItem.bid_price) / (double)int_min_sell_price * 100;
+            
 
             myItem.Fruit = (int)lhf;
             myItem.Gap = (int)gap;
+            myItem.Gap_mybid = (int)mygap;
             myItem.sells_html = selltable;
             myItem.buys_html = buytable;
             return "OK";
@@ -1089,6 +1111,7 @@ namespace SteamBoat.Services
             var items = _context.Items.ToList();
             foreach (var item in items) 
             {
+                item.Gap_mybid = 0;
                 item.bid_quant = 0;
                 item.bid_price = 0;
                 item.bid_price_in_pound = "";
@@ -1179,6 +1202,119 @@ namespace SteamBoat.Services
         
 
 
+        }
+
+        public string PostBids() 
+        
+        {
+            var options = new ChromeOptions();
+            options.AddArgument(@"user-data-dir=C:\Users\Admin\AppData\Local\Google\Chrome\User Data\Profile 4\Profile 1\Default");
+            options.AddArgument("--disable-blink-features=AutomationControlled");
+            var driver = new ChromeDriver(options);
+
+            var allItems = _context.Items.ToList();
+
+            foreach (var myItem in allItems)
+            {
+                if (myItem.autoBidStr == "Cancel Bid")
+                {
+                    CancelBid(driver, myItem);
+                }
+                else
+                {
+                    if (myItem.autoBidint != 0)
+                    {
+                        //do the bizzo
+                        //cancel current bid?
+                        if (myItem.bid_price != 0) 
+                        {
+                            RandomWait(10, 30);
+                            CancelBid(driver, myItem);
+                            RandomWait(20, 30);
+                            PlaceBid(driver, myItem);
+                            RandomWait(10, 20);
+                        }
+
+                    }
+                    else
+                    {
+                        //no auto bid set
+                    }
+                }
+            
+            }
+
+            driver.Close();
+                return ("OK");
+        }
+        string PlaceBid(ChromeDriver driver, Item myItem) 
+        {
+            Console.WriteLine("Placing bid for " + myItem.Name + " : Bid  = " + myItem.autoBidStr);
+            driver.Url = myItem.ItemPageURL;
+            RandomWait(30, 60);
+            var myBuyButton = driver.FindElement(By.ClassName("market_commodity_buy_button"));
+            RandomWait(10, 30);
+            myBuyButton.Click();
+            RandomWait(30, 50);
+            var price_box = driver.FindElement(By.Id("market_buy_commodity_input_price"));
+            RandomWait(5, 15);
+            price_box.SendKeys(Keys.Backspace);
+            RandomWait(1, 8);
+            price_box.SendKeys(Keys.Backspace);
+            RandomWait(2, 11);
+            price_box.SendKeys(Keys.Backspace);
+            RandomWait(3, 14);
+            price_box.SendKeys(Keys.Backspace);
+            RandomWait(1, 8);
+            price_box.SendKeys(Keys.Backspace);
+            RandomWait(3, 14);
+            price_box.SendKeys(Keys.Backspace);
+            RandomWait(4, 18);
+            price_box.SendKeys(myItem.autoBidStr);
+            var terms = driver.FindElement(By.Id("market_buyorder_dialog_accept_ssa"));
+            RandomWait(10, 30);
+            terms.Click();
+            RandomWait(20, 30);
+            var placeorder = driver.FindElement(By.Id("market_buyorder_dialog_purchase"));
+            RandomWait(10, 20);
+            placeorder.Click();
+            RandomWait(70, 100);
+            //update the item rec
+            //changes should be confirmed next time bids are inported
+            myItem.bid_price = myItem.autoBidint;
+            _context.SaveChanges();
+            return "OK";
+        }
+        string CancelBid(ChromeDriver driver,Item myItem) 
+        {
+            Console.WriteLine("Cancelling bid for " + myItem.Name + " : Bid was = " + myItem.bid_price_in_pound);
+            driver.Url = myItem.ItemPageURL;
+            RandomWait(30, 60);
+            try
+            {
+                var cancelbutton = driver.FindElements(By.ClassName("item_market_action_button"));
+               
+                    RandomWait(10, 20);
+                    cancelbutton[cancelbutton.Count()-1].Click();
+                    RandomWait(10, 20);
+               
+            }
+            catch
+            {
+                Console.WriteLine("Couldnt Cancel, Already done?");
+            }
+            return "OK";
+        }
+
+        void RandomWait(int min100, int max100)
+        {
+
+            //Generate random sleeptime
+            Random waitTime = new Random();
+            var seconds = waitTime.Next(min100 * 75, max100 * 75);
+
+            //Put the thread to sleep
+            System.Threading.Thread.Sleep(seconds);
         }
     }
 }

@@ -111,15 +111,17 @@ namespace SteamBoat.Controllers
 
         public IActionResult Index()
         {
-         //   return RedirectToAction("AutoBid");
-         //   var allItems = _context.Items.ToList();
-         //   foreach (var myItem in allItems) 
-         //   {
-         //       _SteamBoatService.UpdateStatsforItem(myItem, Freshness.AnyCached);
-         //   }
 
-           
-         //   _context.SaveChanges();
+    
+     // return RedirectToAction("AutoBid");
+            //   var allItems = _context.Items.ToList();
+            //    foreach (var myItem in allItems) 
+            //    {
+            //        _SteamBoatService.UpdateStatsforItem(myItem, Freshness.AnyCached);
+            //     }
+
+            // 
+            //   _context.SaveChanges();
 
             return View();
 
@@ -130,38 +132,96 @@ namespace SteamBoat.Controllers
         {
 
             int MinGap = 21;
-            int MinActivity = 25;
-            int MinStartingPrice = 65;
+            int MinActivity = 20;
+            int MinStartingPrice = 55;
             int MaxStartingPrice = 700;
 
             var allItems = _context.Items.ToList();
             foreach (var myItem in allItems)
             {
+                myItem.autoBidint = 0;
+                myItem.autoBidStr = "";
                 if (myItem.Gap < MinGap || myItem.StartingPrice > MaxStartingPrice)
                 {
-                    //dont bid & cancell bids
+                    //item small gap or too big price
+                 //we dont to bid
                     myItem.autoBidint = 0;
-                    myItem.autoBidStr = "Cancel Bids";
+                   
+                    //check current bids
+                    if (myItem.bid_price > 0)
+                    {
+                        //we have a bid for this check its gap
+                        if (myItem.Gap_mybid < MinGap)
+                        {
+                            //main gap and my gap below min
+                            //dont bid & cancell bids
+                        
+                            myItem.autoBidStr = "Cancel Bid";
+                        }
+                        else
+                        {
+                            //just the main gap that is too small
+                            //dont cancel my bid, just dont make new bid
+                        
+                            myItem.autoBidStr = "Keep Current Bid";
+
+                        }    
+                        
+                    }
+
 
                 }
                 else 
                 {
+                    //POTENTIAL BID
+                    //we may want to bid
+                    //check we are not already top bid
+
                     if (myItem.Activity > MinActivity && myItem.StartingPrice > MinStartingPrice) 
                     {
+                        //we may want to bid
+                        //check we are not already top bid
 
-                        if (myItem.bid1Quant == 1)
+                        if (myItem.bid_price >= myItem.bid1Price)
                         {
-                            myItem.autoBidint = myItem.bid1Price;
-                        }
-                        else 
+                            Console.WriteLine("Already top bid : " + myItem.Name + " = " + myItem.bid_price_in_pound);
+                            Console.WriteLine("Check gap below my bid (bigger than 1?)");
+                            var mybidshouldbe = myItem.bid2Price + 1;
+                            if (mybidshouldbe != myItem.bid1Price) 
+                            {
+                                if (myItem.bid1Quant > 1)
+                                {
+                                    Console.WriteLine("Cant reduce becasue others are also bidding the gap");
+
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Reduced bid from " + myItem.bid_price_in_pound);
+                                    myItem.autoBidint = myItem.bid2Price + 1;
+                                    decimal dec = Convert.ToDecimal(myItem.autoBidint);
+                                    dec = dec / 100;
+                                    myItem.autoBidStr = dec.ToString();
+                                    Console.WriteLine("to ... " + myItem.autoBidStr);
+                                }
+                            }
+
+                        } 
+                        else
                         {
-                            myItem.autoBidint = myItem.bid1Price + 1;
+
+                            if (myItem.bid1Quant == 1)
+                            {
+                                myItem.autoBidint = myItem.bid1Price;
+                            }
+                            else
+                            {
+                                myItem.autoBidint = myItem.bid1Price + 1;
+                            }
+
+                            decimal dec = Convert.ToDecimal(myItem.autoBidint);
+                            dec = dec / 100;
+                            myItem.autoBidStr = dec.ToString();
                         }
-
-                        decimal dec = Convert.ToDecimal(myItem.autoBidint);
-                        dec = dec / 100;
-                        myItem.autoBidStr = dec.ToString();
-
                     }
                 
                 
@@ -171,6 +231,11 @@ namespace SteamBoat.Controllers
             }
 
             _context.SaveChanges();
+
+            _SteamBoatService.PostBids();
+
+
+
             return Content("OK");
 
 
@@ -701,5 +766,15 @@ namespace SteamBoat.Controllers
             return _context.Items.Any(e => e.hash_name_key == id);
         }
 
+        void RandomWait(int min100, int max100)
+        {
+
+            //Generate random sleeptime
+            Random waitTime = new Random();
+            var seconds = waitTime.Next(min100 * 100, max100 * 100);
+
+            //Put the thread to sleep
+            System.Threading.Thread.Sleep(seconds);
+        }
     }
 }

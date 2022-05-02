@@ -63,5 +63,7 @@ namespace SteamBoat.Interfaces
 
         public string UpdateStatsforItem(Item myItem, Freshness freshness);
 
+        public string PostBids();
+
     }
 }
