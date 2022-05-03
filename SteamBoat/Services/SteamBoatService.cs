@@ -693,6 +693,40 @@ namespace SteamBoat.Services
                     int intquant = int.Parse(quant.ToString());
 
 
+                    if (cnt == 0)
+                    {
+
+                        myItem.sell1Price = intprice;
+                        myItem.sell1Quant = intquant;
+                    }
+
+                    if (cnt == 1)
+                    {
+
+                        myItem.sell2Price = intprice;
+                        myItem.sell2Quant = intquant;
+                    }
+                    if (cnt == 2)
+                    {
+
+                        myItem.sell3Price = intprice;
+                        myItem.sell3Quant = intquant;
+                    }
+                    if (cnt == 3)
+                    {
+
+                        myItem.sell4Price = intprice;
+                        myItem.sell4Quant = intquant;
+                    }
+                    if (cnt == 4)
+                    {
+
+                        myItem.sell5Price = intprice;
+                        myItem.sell5Quant = intquant;
+                    }
+
+
+
 
 
                     var mysaleitemchecklist = "";
@@ -816,11 +850,13 @@ namespace SteamBoat.Services
             myItem.StartingPrice = int_min_sell_price;
 
             var lhf = ((double)int_next_min_sell_price - (double)int_min_sell_price) / (double)int_next_min_sell_price * 100;
+            var hhf = ((double)myItem.bid1Price - (double)myItem.bid2Price) / (double)myItem.bid1Price * 100;
             var gap = ((double)int_min_sell_price - (double)int_max_buy_price) / (double)int_min_sell_price * 100;
             var mygap = ((double)int_min_sell_price - (double)myItem.bid_price) / (double)int_min_sell_price * 100;
             
 
             myItem.Fruit = (int)lhf;
+            myItem.Fruit2 = (int)hhf;
             myItem.Gap = (int)gap;
             myItem.Gap_mybid = (int)mygap;
             myItem.sells_html = selltable;
@@ -1219,6 +1255,8 @@ namespace SteamBoat.Services
                 if (myItem.autoBidStr == "Cancel Bid")
                 {
                     CancelBid(driver, myItem);
+                    myItem.autoBidStr = "";
+                    _context.SaveChanges();
                 }
                 else
                 {
@@ -1226,15 +1264,17 @@ namespace SteamBoat.Services
                     {
                         //do the bizzo
                         //cancel current bid?
-                        if (myItem.bid_price != 0) 
+                        if (myItem.bid_price != 0)
                         {
                             RandomWait(10, 30);
                             CancelBid(driver, myItem);
+                         
+                        }
+                      
+                        //PLACE BID
                             RandomWait(20, 30);
                             PlaceBid(driver, myItem);
                             RandomWait(10, 20);
-                        }
-
                     }
                     else
                     {
@@ -1282,6 +1322,7 @@ namespace SteamBoat.Services
             //update the item rec
             //changes should be confirmed next time bids are inported
             myItem.bid_price = myItem.autoBidint;
+            myItem.autoBidint = 0;
             _context.SaveChanges();
             return "OK";
         }
@@ -1303,6 +1344,8 @@ namespace SteamBoat.Services
             {
                 Console.WriteLine("Couldnt Cancel, Already done?");
             }
+           
+    
             return "OK";
         }
 

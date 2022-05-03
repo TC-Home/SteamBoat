@@ -44,7 +44,11 @@ namespace SteamBoat.Models
         public int min_sell_price { get; set; }
         public int next_min_sell_price { get; set; }
 
+        //low hanging
         public int Fruit { get; set; }
+
+        //high hanging
+        public int Fruit2 { get; set; }
 
         public int Gap { get; set; }
 
@@ -106,8 +110,21 @@ namespace SteamBoat.Models
         public int bid5Price { get; set; }
         public int bid5Quant { get; set; }
 
+        public int sell1Price { get; set; }
+        public int sell1Quant { get; set; }
+        public int sell2Price { get; set; }
+        public int sell2Quant { get; set; }
+        public int sell3Price { get; set; }
+        public int sell3Quant { get; set; }
+        public int sell4Price { get; set; }
+        public int sell4Quant { get; set; }
+        public int sell5Price { get; set; }
+        public int sell5Quant { get; set; }
+
         public int autoBidint { get; set; }
         public string autoBidStr { get; set; }
+
+        public  string autoBidNotes { get; set; }
 
 
 
