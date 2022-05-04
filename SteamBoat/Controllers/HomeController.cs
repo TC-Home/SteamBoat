@@ -138,7 +138,7 @@ namespace SteamBoat.Controllers
         {
 
             int MinGap = 21;
-            int MinActivity = 20;
+            int MinActivity = 15;
             int MinStartingPrice = 50;
             int MaxStartingPrice = 700;
             
@@ -151,7 +151,7 @@ namespace SteamBoat.Controllers
                 myItem.autoBidNotes = "";
                 var before = myItem.bid_price;
 
-                if (myItem.Gap < MinGap || myItem.StartingPrice > MaxStartingPrice)
+                if ((myItem.Gap < MinGap || myItem.StartingPrice > MaxStartingPrice))
                 {
                     //item small gap or too big price
                  //we dont to bid
@@ -187,7 +187,7 @@ namespace SteamBoat.Controllers
                     //we may want to bid
                     //check we are not already top bid
 
-                    if (myItem.Activity > MinActivity && myItem.StartingPrice > MinStartingPrice) 
+                    if ((myItem.Activity > MinActivity && myItem.StartingPrice > MinStartingPrice) || myItem.IncludeInAutoBid == true) 
                     {
                         //we may want to bid
                         //check we are not already top bid
@@ -232,13 +232,31 @@ namespace SteamBoat.Controllers
 
 
                             //Check that the top bid isnt too high and making us pay too much (high hanging fruit)
-                            if (myItem.Fruit2 > 7) 
+                            // gap over 8
+                            // starting price over 80
+                            // bid quant = 1
+
+                            if (myItem.Fruit2 > 15 && myItem.StartingPrice > 99 && myItem.bid1Quant == 1)
                             {
                                 myItem.autoBidNotes = myItem.autoBidNotes = "HHF | ";
                                 //HHF!
                                 Console.WriteLine("HHF!! Reducing bid ...");
                                 myItem.autoBidint = myItem.bid2Price + 1;
                                 Console.WriteLine("to ..." + myItem.autoBidint.ToString());
+
+                            }
+                            else 
+                            {
+                                if (myItem.Fruit2 > 10 && myItem.StartingPrice > 199 && myItem.bid1Quant == 1)
+                                {
+                                    myItem.autoBidNotes = myItem.autoBidNotes = "HHF2 | ";
+                                    //HHF!
+                                    Console.WriteLine("HHF2!! Reducing bid ...");
+                                    myItem.autoBidint = myItem.bid2Price + 1;
+                                    Console.WriteLine("to ..." + myItem.autoBidint.ToString());
+
+                                }
+
 
                             }
 
@@ -284,7 +302,7 @@ namespace SteamBoat.Controllers
 
             _context.SaveChanges();
 
-            _SteamBoatService.PostBids();
+            //_SteamBoatService.PostBids();
 
 
 

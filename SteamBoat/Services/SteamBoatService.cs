@@ -1266,15 +1266,15 @@ namespace SteamBoat.Services
                         //cancel current bid?
                         if (myItem.bid_price != 0)
                         {
-                            RandomWait(10, 30);
+                            
                             CancelBid(driver, myItem);
                          
                         }
                       
                         //PLACE BID
-                            RandomWait(20, 30);
+                            
                             PlaceBid(driver, myItem);
-                            RandomWait(10, 20);
+                            
                     }
                     else
                     {
@@ -1290,61 +1290,78 @@ namespace SteamBoat.Services
         string PlaceBid(ChromeDriver driver, Item myItem) 
         {
             Console.WriteLine("Placing bid for " + myItem.Name + " : Bid  = " + myItem.autoBidStr);
-            driver.Url = myItem.ItemPageURL;
-            RandomWait(30, 60);
-            var myBuyButton = driver.FindElement(By.ClassName("market_commodity_buy_button"));
-            RandomWait(10, 30);
-            myBuyButton.Click();
-            RandomWait(30, 50);
-            var price_box = driver.FindElement(By.Id("market_buy_commodity_input_price"));
-            RandomWait(5, 15);
-            price_box.SendKeys(Keys.Backspace);
-            RandomWait(1, 8);
-            price_box.SendKeys(Keys.Backspace);
-            RandomWait(2, 11);
-            price_box.SendKeys(Keys.Backspace);
-            RandomWait(3, 14);
-            price_box.SendKeys(Keys.Backspace);
-            RandomWait(1, 8);
-            price_box.SendKeys(Keys.Backspace);
-            RandomWait(3, 14);
-            price_box.SendKeys(Keys.Backspace);
-            RandomWait(4, 18);
-            price_box.SendKeys(myItem.autoBidStr);
-            var terms = driver.FindElement(By.Id("market_buyorder_dialog_accept_ssa"));
-            RandomWait(10, 30);
-            terms.Click();
-            RandomWait(20, 30);
-            var placeorder = driver.FindElement(By.Id("market_buyorder_dialog_purchase"));
-            RandomWait(10, 20);
-            placeorder.Click();
-            RandomWait(70, 100);
-            //update the item rec
-            //changes should be confirmed next time bids are inported
-            myItem.bid_price = myItem.autoBidint;
-            myItem.autoBidint = 0;
-            _context.SaveChanges();
-            return "OK";
+            try
+            {
+                driver.Url = myItem.ItemPageURL;
+                RandomWait(30, 40);
+                var myBuyButton = driver.FindElement(By.ClassName("market_commodity_buy_button"));
+                RandomWait(5, 15);
+                myBuyButton.Click();
+                RandomWait(10, 20);
+                var price_box = driver.FindElement(By.Id("market_buy_commodity_input_price"));
+                RandomWait(3, 10);
+                price_box.SendKeys(Keys.Backspace);
+                RandomWait(1, 6);
+                price_box.SendKeys(Keys.Backspace);
+                RandomWait(1, 8);
+                price_box.SendKeys(Keys.Backspace);
+                RandomWait(1, 10);
+                price_box.SendKeys(Keys.Backspace);
+                RandomWait(1, 6);
+                price_box.SendKeys(Keys.Backspace);
+                RandomWait(1, 10);
+                price_box.SendKeys(Keys.Backspace);
+                RandomWait(10, 28);
+                price_box.SendKeys(myItem.autoBidStr);
+                var terms = driver.FindElement(By.Id("market_buyorder_dialog_accept_ssa"));
+                RandomWait(5, 20);
+                terms.Click();
+                RandomWait(10, 20);
+                var placeorder = driver.FindElement(By.Id("market_buyorder_dialog_purchase"));
+                RandomWait(5, 10);
+                placeorder.Click();
+                RandomWait(95, 99);
+                //update the item rec
+                //changes should be confirmed next time bids are inported
+                myItem.bid_price = myItem.autoBidint;
+                myItem.autoBidint = 0;
+                _context.SaveChanges();
+            }
+            catch 
+            {
+                Console.WriteLine("**************** FAIL GRABBING PAGE!! ***********************");
+                RandomWait(99, 100);
+                
+            }
+            return "FAIL";
         }
         string CancelBid(ChromeDriver driver,Item myItem) 
         {
             Console.WriteLine("Cancelling bid for " + myItem.Name + " : Bid was = " + myItem.bid_price_in_pound);
-            driver.Url = myItem.ItemPageURL;
-            RandomWait(30, 60);
             try
             {
-                var cancelbutton = driver.FindElements(By.ClassName("item_market_action_button"));
-               
-                    RandomWait(10, 20);
-                    cancelbutton[cancelbutton.Count()-1].Click();
-                    RandomWait(10, 20);
-               
+                driver.Url = myItem.ItemPageURL;
+                RandomWait(20, 50);
+                try
+                {
+                    var cancelbutton = driver.FindElements(By.ClassName("item_market_action_button"));
+
+                    RandomWait(5, 10);
+                    cancelbutton[cancelbutton.Count() - 1].Click();
+                    RandomWait(5, 10);
+
+                }
+                catch
+                {
+                    Console.WriteLine("Couldnt Cancel, Already done?");
+                }
             }
-            catch
+            catch 
             {
-                Console.WriteLine("Couldnt Cancel, Already done?");
+                Console.WriteLine("**************** Couldnt get page to cancel, Connection Error?");
+                RandomWait(99,100);
+                RandomWait(99, 100);
             }
-           
     
             return "OK";
         }
@@ -1354,7 +1371,7 @@ namespace SteamBoat.Services
 
             //Generate random sleeptime
             Random waitTime = new Random();
-            var seconds = waitTime.Next(min100 * 75, max100 * 75);
+            var seconds = waitTime.Next(min100 * 72, max100 * 72);
 
             //Put the thread to sleep
             System.Threading.Thread.Sleep(seconds);

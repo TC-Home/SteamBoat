@@ -126,7 +126,7 @@ namespace SteamBoat.Models
 
         public  string autoBidNotes { get; set; }
 
-
+        public bool IncludeInAutoBid { get; set; }
 
 
         [ForeignKey("Game_hash_name_key")]
