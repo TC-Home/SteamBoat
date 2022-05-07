@@ -128,6 +128,13 @@ namespace SteamBoat.Models
 
         public bool IncludeInAutoBid { get; set; }
 
+        public bool CancelCurrentBid { get; set; }
+        public int IdealBidInt { get; set; }
+        public String IdealBidStr { get; set; }
+
+        public string IdealBid_Notes { get; set; }
+
+
 
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }

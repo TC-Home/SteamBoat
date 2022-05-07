@@ -60,7 +60,7 @@ namespace SteamBoat.Services
 
             //we have a mission
             //Grap all the pages/jsons in the mission-feederurls
-            var myUrls = _context.FeederUrl.Where(u => u.MissionId == mymission.MissionId).OrderByDescending(o => o.FeederId);
+            var myUrls = _context.FeederUrl.Where(u => u.MissionId == mymission.MissionId).OrderBy(o => o.FeederId);
 
             if (!myUrls.Any()) 
             {
@@ -1252,18 +1252,21 @@ namespace SteamBoat.Services
 
             foreach (var myItem in allItems)
             {
-                if (myItem.autoBidStr == "Cancel Bid")
+                if (myItem.CancelCurrentBid == true)
                 {
                     CancelBid(driver, myItem);
-                    myItem.autoBidStr = "";
+                    myItem.CancelCurrentBid = false;
+                    myItem.IdealBidInt = 0;
+                    myItem.IdealBidStr = "";
                     _context.SaveChanges();
                 }
                 else
                 {
-                    if (myItem.autoBidint != 0)
+                    if (myItem.IdealBidInt != 0)
                     {
                         //do the bizzo
                         //cancel current bid?
+                        //we got an ideal bid, cancel current if we have one
                         if (myItem.bid_price != 0)
                         {
                             
@@ -1289,7 +1292,7 @@ namespace SteamBoat.Services
         }
         string PlaceBid(ChromeDriver driver, Item myItem) 
         {
-            Console.WriteLine("Placing bid for " + myItem.Name + " : Bid  = " + myItem.autoBidStr);
+            Console.WriteLine("Placing bid for " + myItem.Name + " : Bid  = " + myItem.IdealBidStr);
             try
             {
                 driver.Url = myItem.ItemPageURL;
@@ -1312,7 +1315,12 @@ namespace SteamBoat.Services
                 RandomWait(1, 10);
                 price_box.SendKeys(Keys.Backspace);
                 RandomWait(10, 28);
-                price_box.SendKeys(myItem.autoBidStr);
+                if (myItem.IdealBidInt > 800 || myItem.IdealBidStr.Substring(1, 1) != ".")
+                {
+                    //somethings not right
+                    throw new Exception("Bid amount looks wrong!");
+                }
+                price_box.SendKeys(myItem.IdealBidStr);
                 var terms = driver.FindElement(By.Id("market_buyorder_dialog_accept_ssa"));
                 RandomWait(5, 20);
                 terms.Click();
@@ -1323,8 +1331,10 @@ namespace SteamBoat.Services
                 RandomWait(95, 99);
                 //update the item rec
                 //changes should be confirmed next time bids are inported
-                myItem.bid_price = myItem.autoBidint;
-                myItem.autoBidint = 0;
+               
+                myItem.bid_price = myItem.IdealBidInt;
+                myItem.IdealBidInt = 0;
+                myItem.IdealBidStr = "";
                 _context.SaveChanges();
             }
             catch 

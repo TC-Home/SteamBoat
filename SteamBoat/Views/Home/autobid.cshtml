@@ -1,0 +1,307 @@
+﻿@model IEnumerable<SteamBoat.Models.Item>
+
+
+@{
+    Layout = "~/views/shared/_layoutgrid.cshtml";    
+    }
+@{
+    ViewData["Title"] = "Items";
+}
+<table class="table" id="items">
+    <thead>
+        <tr>
+               <th>
+                
+            </th> <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+               Auto Bid
+            </th>
+                <th>
+                @Html.DisplayNameFor(model => model.Ave_profit)
+            </th>
+               <th>
+                @Html.DisplayNameFor(model => model.total_sales)
+            </th>
+
+         
+
+          
+            <th>
+                @Html.DisplayNameFor(model => model.Activity)
+            </th>
+        
+       
+            <th>
+                @Html.DisplayNameFor(model => model.Gap)
+            </th>  <th>
+                @Html.DisplayNameFor(model => model.StartingPrice)
+            </th>
+                <th>
+                Top Bid
+            </th>
+            <th>
+                My Bid
+            </th>
+            <th>
+                All Bids
+            </th>
+            <th>
+                Recent
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+
+    
+            var bidcss = "";
+            if (item.bid_price < item.max_buy_price )
+            {
+                bidcss = "red";
+            }
+            else
+            {
+                
+                bidcss = "blue";
+            }
+
+            if (item.bid_price == 0) { bidcss = ""; }
+
+
+            var mygreen = (item.Gap * 4) - 30;
+            var myred = 255 -(item.Gap * 10);
+            if (mygreen > 255) { mygreen = 255; }
+            if (myred > 255) { myred = 255; }
+
+            var gapcss = "";
+
+
+            if (item.Gap > 19)
+            {
+                gapcss = "background-color: rgb(" + (255 - mygreen).ToString() + ",255," + (255 - mygreen).ToString() + ")";
+            }
+            else
+            {
+
+                gapcss = "background-color: rgb(255," + (255 - myred).ToString() + "," + (255 - myred).ToString() + ")";
+            }
+         
+
+            //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY //ACTIVITY 
+            var mygreen2 = (item.Activity/ 2.5);
+            var myred2 = (255 -((item.Activity/ 2.5)* 8)) ;
+            if (mygreen2 > 255) { mygreen2 = 255; }
+            if (myred2 > 255) { myred2 = 255; }
+
+            var activitycss  = "";
+
+
+            if (item.Activity > 74)
+            {
+                activitycss = "background-color: rgb(" + (255 - (int)mygreen2).ToString() + ",255," + (255 - (int)mygreen2).ToString() + ")";
+            }
+            else
+            {
+
+                activitycss = "background-color: rgb(255," + (255 - (int)myred2).ToString() + "," + (255 - (int)myred2).ToString() + ")";
+            }
+
+
+
+
+
+
+
+
+
+
+
+           
+
+            var gamesearch = "https://steamcommunity.com/market/search?q=" + item.Game.Replace(" Community Items", "").Replace("™", " ").Replace(":", "") + "#p1_price_desc";
+
+
+                <tr>
+            <td>
+                <a href="@item.ItemPageURL" target="_new">
+                <img src="/itemimages/@{@item.hash_name_key.Replace(":"," ").Replace("\""," ").Replace("|"," ")}.png" />
+            </a>
+            </td>
+                <td>
+                <a href="@item.ItemPageURL" target="_new">
+                @Html.DisplayFor(modelItem => item.Name)
+                </a>
+            </td>
+              <td>
+                <a href="@gamesearch" target="_new">
+                 @item.IdealBid_Notes
+                </a>
+            </td>
+            <td style="background-color: rgb(@ConColour(-30,30,0,item.Ave_profit,false)">
+                @Html.DisplayFor(modelItem => item.Ave_profit)
+            </td>
+            <td style="background-color: rgb(@ConColour(0,20,0,item.total_sales,false)">
+                @Html.DisplayFor(modelItem => item.total_sales)
+            </td>
+       
+             <td style="@activitycss">
+                @Html.DisplayFor(modelItem => item.Activity)
+               
+            </td>
+         
+        
+            <td style="@gapcss">
+                @Html.DisplayFor(modelItem => item.Gap)
+            </td>     <td>
+                @Html.DisplayFor(modelItem => item.StartingPrice)
+            </td>
+               <td>
+                @Html.DisplayFor(modelItem => item.max_buy_price)
+            </td>
+            <td class="@bidcss">
+                @Html.DisplayFor(modelItem => item.bid_price)
+            </td>
+         <td>
+             <table>
+                 <tr>
+                     <td>@Html.Raw(item.buys_html)</td>
+                     <td>@Html.Raw(item.sells_html)</td>
+                 </tr>
+             </table>
+         </td>
+      <td style="vertical-align:bottom; padding-left:0px;">
+          <div style="position: relative">
+          <div style="height: @(item.AH1)px; left:0px; " class="bars">
+              &nbsp;
+          </div>
+          <div style="height: @(item.AH2)px; left: 9px;" class="bars">
+              &nbsp;
+          </div>
+          <div style="height: @(item.AH3)px; left: 18px;" class="bars">
+              &nbsp;
+          </div>
+           <div style="height: @(item.AH4)px; left: 27px;" class="bars">
+              &nbsp;
+          </div>
+           <div style="height: @(item.AH5)px; left: 36px;" class="bars">
+              &nbsp;
+          </div>
+           <div style="height: @(item.AH6)px; left: 45px;" class="bars">
+              &nbsp;
+          </div>
+           <div style="height: @(item.AH7)px; left: 54px;" class="bars">
+              &nbsp;
+          </div>
+           <div style="height: @(item.AH8)px; left: 63px;" class="bars">
+              &nbsp;
+          </div>
+            <div style="height: @(item.AH9)px; left: 72px;" class="bars">
+              &nbsp;
+          </div>
+            <div style="height: @(item.AH10)px; left: 81px;" class="bars">
+              &nbsp;
+          </div>
+          </div>
+
+      </td>
+        </tr>
+}
+    </tbody>
+</table>
+@functions
+{
+
+    private string ConColour( int Min, int Max, int Flip, int Value, bool Invert) 
+        {
+            if (Value < Min) 
+            {
+
+                Value = Min;
+            
+            }
+            if (Value > Max) 
+            {
+
+                Value = Max;
+            }
+
+
+            //fix for negative mins
+            if (Min < 0) 
+            {
+                var minus = (Min * -1);
+                Min = Min + minus;
+                Max = Max + minus;
+                Value = Value + minus;
+                Flip = Flip + minus;
+                    
+            
+            }
+        if (Value == Flip) { return "255,255,255"; }
+
+
+
+            double c1range = Flip - Min;
+            double c2range = Max - Flip;
+            double c1unit = 230 / c1range;
+            double c2unit = 230 / c2range;
+            int Tint = 0;
+
+            if (Value < Flip)
+            {
+                Tint = (int)((Value) * c1unit);
+
+
+                if (Invert == false)
+                {
+
+                    return Red(Tint);
+                }
+                else
+                {
+
+                    return Green(Tint);
+                
+                }
+
+
+            }
+            else 
+            {
+                Tint = (int)((Value-Flip) * c2unit);
+                if (Invert == false)
+                {
+                    return Green(230-Tint);
+
+                }
+                else
+                {
+                    return Red(230-Tint);
+                    
+
+                }
+
+            }
+
+
+            
+        }
+
+
+        public string Green(int Tint) 
+        {
+
+            return (Tint).ToString() + ",255," + (Tint).ToString();
+        }
+
+
+        public string Red(int Tint)
+        {
+
+            return "255," + (Tint).ToString() + "," + (Tint).ToString();
+        }
+
+
+}

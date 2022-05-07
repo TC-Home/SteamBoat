@@ -39,8 +39,9 @@ namespace SteamBoat.Controllers
             _context = context;
         }
 
-        public IActionResult Domission(int id, bool grab=false) 
+        public IActionResult Domission(int id = 1003, bool grab=false) 
         {
+
             missionReportVM res = null;
 
             if (grab)
@@ -106,13 +107,14 @@ namespace SteamBoat.Controllers
             }
             
             var myGaps = _SteamBoatService.GetGaps();
+
             return View(myGaps);
         }
 
         public IActionResult Index()
         {
 
-    
+            
      // return RedirectToAction("AutoBid");
             //   var allItems = _context.Items.ToList();
             //    foreach (var myItem in allItems) 
@@ -134,7 +136,313 @@ namespace SteamBoat.Controllers
 
             return Content("OK");
         }
-            public IActionResult AutoBid()
+        
+
+        public IActionResult AutoBid()
+        {
+            var allItems = _context.Items.ToList();
+            foreach (var myItem in allItems)
+            {
+                myItem.IdealBid_Notes = "";
+                myItem.IdealBidInt = 0;
+                myItem.IdealBidStr = "";
+                myItem.CancelCurrentBid = false;
+
+                if (myItem.Name == "Top Hat") 
+                    
+                {
+                
+                }
+
+                //set ideal bid
+                if (ActivityGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0) 
+                {
+                    if (PriceGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0)
+                    {
+                        if (myItem.IncludeInAutoBid) 
+                        {
+                            myItem.IdealBid_Notes += " FLAGGED TO INCLUDE | ";
+                        }
+                        if (myItem.bid_price > 0) 
+                        {
+                            myItem.IdealBid_Notes += " EXISTING BID | ";
+                        }
+                     
+                        //CAlculate the GAP
+                        if (myItem.bid_price == myItem.bid1Price)
+                        {
+                            //I already have top bid
+                            myItem.IdealBidInt = myItem.bid1Price;
+                        }
+                        else
+                        {
+                            //Calculate likely bid to work out GAP
+                            myItem.IdealBidInt = myItem.bid1Price + 1;
+                        }
+
+
+                        var myGap = ((double)myItem.StartingPrice - (double)myItem.IdealBidInt) / (double)myItem.StartingPrice * 100;
+                        //is this gap OK
+                        //Console.WriteLine("Gap = " + ((int)myGap).ToString() + " | " + GapGood((int)myGap, myItem).ToString());
+                        if (GapGood((int)myGap, myItem))
+                        {
+
+                            //Gap is good
+                            //Set ideal bid
+
+                            //Do we already have top bid?
+                            if (myItem.bid_price == myItem.bid1Price)
+                            {
+
+                                //we have top bid
+                                //If we are the only one bidding this price
+                                //check we cant reduce it
+                                if (myItem.bid1Quant == 1)
+                                {
+                                    myItem.IdealBid_Notes += " WE HAVE SOLO TOP BID | ";
+                                    if (myItem.bid_price > myItem.bid2Price + 1)
+                                    {
+                                        //room to reduce our top bid
+                                        myItem.IdealBid_Notes += " REDUCING IDEAL BID | ";
+                                        myItem.IdealBidInt = myItem.bid2Price + 1;
+                                    }
+                                    else 
+                                    {
+                                        //keep top bid
+                                        myItem.IdealBid_Notes += " HOLD | ";
+                                        myItem.IdealBidInt = 0;
+                                        myItem.IdealBidStr = "";
+                                    }
+
+                                }
+                                else
+                                {
+                                    myItem.IdealBid_Notes += " WE HAVE TOP BID WITH OTHERS | ";
+                                    if (myItem.bid1Quant > 3)
+                                    {
+                                        myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
+                                        myItem.IdealBidInt++;
+                                    }
+                                    else 
+                                    {
+                                        myItem.IdealBid_Notes += " HOLD | ";
+                                        myItem.IdealBidInt = 0;
+                                        myItem.IdealBidStr = "";
+                                    }
+
+                                }
+
+
+
+                            }
+                            else
+                            {
+
+                                //DONT HAVE TOP BID
+
+                                if (myItem.bid_price > 0)
+                                {
+                                    //ALREADY HAVE A BID
+                                    //BUT NOT TOP BID
+
+                                    myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
+                                    myItem.IdealBidInt = myItem.bid1Price + 1;
+                                }
+                                else
+                                {
+                                    //DONT ALREADY HAVE A BID
+                                    //NEW BID
+                                    myItem.IdealBid_Notes += " NEW BID | ";
+                                    myItem.IdealBidInt = myItem.bid1Price + 1;
+                                }
+                            }
+
+
+
+
+
+
+
+
+                        }
+                        else
+                        {
+                            //GAp too Small
+                            if (myItem.bid_price > 0)
+                            {
+                                myItem.IdealBid_Notes += " CANCEL CURRENT BID (GAP) | ";
+                                myItem.CancelCurrentBid = true;
+                            }
+                            myItem.IdealBidInt = 0;
+                            myItem.IdealBidStr = "";
+                        }
+
+
+
+                    }
+                    else 
+                    {
+                        //Price out of bounds
+                        if (myItem.bid_price > 0)
+                        {
+                            myItem.IdealBid_Notes += " CANCEL CURRENT BID (PRICE OOB) | ";
+                            myItem.CancelCurrentBid = true;
+                        }
+                        myItem.IdealBidInt = 0;
+                        myItem.IdealBidStr = "";
+
+                    }
+
+                }
+                //FINAL CHECKS
+                if (myItem.IdealBidInt > 0) 
+                {
+                    if (myItem.IdealBidInt > 800 || myItem.IdealBidInt < 10) 
+                    {
+                        myItem.IdealBid_Notes += " ** ERROR ** NUMBER OOB | " + myItem.IdealBidInt.ToString();
+                        myItem.IdealBidInt = 0;
+                        myItem.IdealBidStr = "";
+                    }
+
+
+                    var myGapFinal = ((double)myItem.StartingPrice - (double)myItem.IdealBidInt) / (double)myItem.StartingPrice * 100;
+                    if ((int)myGapFinal < 20)
+                    {
+                        myItem.IdealBid_Notes += " ** ERROR ** GAP < 20 | " + myGapFinal.ToString();
+                        myItem.IdealBidInt = 0;
+                        myItem.IdealBidStr = "";
+                    }
+
+
+
+                    //Still got a value after checks?
+                    if (myItem.IdealBidInt > 0)
+                    {
+                        //Got a bid make a str
+                        decimal dec = Convert.ToDecimal(myItem.IdealBidInt);
+                        dec = dec / 100;
+                        myItem.IdealBidStr = dec.ToString();
+                    }
+
+                }
+
+
+            }
+            _context.SaveChanges();
+            var allItems2 = _context.Items.ToList();
+            return View(allItems2);
+        }
+
+      
+
+        bool GapGood(int myGap, Item myItem)
+        {
+            // 30 - 40
+            if (myItem.StartingPrice <= 40)
+            {
+                if (myGap >= 25)
+                {
+                    return true;
+
+                }
+                else
+                {
+                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
+                    return false;
+
+                }
+            }
+            // 41 - 75
+            if (myItem.StartingPrice <= 75)
+            {
+                if (myGap >= 22)
+                {
+                    return true;
+
+                }
+                else
+                {
+                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
+                    return false;
+
+                }
+            }
+
+            // 76 +
+            if (myGap >= 20)
+                {
+                    return true;
+
+                }
+                else
+                {
+                myItem.IdealBid_Notes += " GAP TOO SMALL | ";
+                return false;
+
+                }
+            
+
+
+        }
+
+        bool PriceGood(Item myItem)
+        {
+            if (myItem.StartingPrice > 30 && myItem.StartingPrice < 800)
+            {
+                return true;
+            }
+            else 
+            {
+                myItem.IdealBid_Notes += " OUT OF PRICE RANGE | ";
+                return false;
+            }
+        }
+
+
+        bool ActivityGood(Item myItem) 
+        {
+            if (myItem.StartingPrice < 50)
+            {
+
+                //Low price item needs to have more activity
+                if (myItem.Activity >= 20)
+                {
+                    //active enough
+                    
+                    return true;
+                }
+                else 
+                {
+                    //NOT active enough
+                    myItem.IdealBid_Notes += " NOT ACTIVE ENOUGH | ";
+                    return false;
+                
+                }
+
+            }
+            else 
+            {
+                //Higher price allowed less activity
+                if (myItem.Activity >= 10)
+                {
+                    //active enough
+                    return true;
+                }
+                else
+                {
+                    //NOT active enough
+                    myItem.IdealBid_Notes += " NOT ACTIVE ENOUGH | ";
+                    return false;
+
+                }
+
+            }
+
+            
+        }
+
+
+            public IActionResult AutoBid2()
         {
 
             int MinGap = 23;
@@ -158,38 +466,7 @@ namespace SteamBoat.Controllers
                 }
 
 
-                if ((myItem.Gap < MinGap || myItem.StartingPrice > MaxStartingPrice))
-                {
-                    //item small gap or too big price
-                 //we dont to bid
-                    myItem.autoBidint = 0;
-                   
-                    //check current bids
-                    if (myItem.bid_price > 0)
-                    {
-                        //we have a bid for this check its gap
-                        if (myItem.Gap_mybid < MinGap)
-                        {
-                            //main gap and my gap below min
-                            //dont bid & cancell bids
-                            myItem.autoBidNotes = myItem.autoBidNotes + "Cancelled becasue of low gap with my bid | ";
-                            myItem.autoBidStr = "Cancel Bid";
-                        }
-                        else
-                        {
-                            //just the main gap that is too small
-                            //dont cancel my bid, just dont make new bid
-                        
-                            myItem.autoBidStr = "Gap small but MYgap OK";
-
-                        }    
-                        
-                    }
-
-
-                }
-                else 
-                {
+              
                     //POTENTIAL BID
                     //we may want to bid
                     //check we are not already top bid
@@ -277,7 +554,7 @@ namespace SteamBoat.Controllers
                     }
               
 
-                }
+               
                 //FINAL CHECK
                     if (myItem.autoBidint != before)
                     {
@@ -316,7 +593,26 @@ namespace SteamBoat.Controllers
 
                     }
 
-                    if (myItem.autoBidint > before)
+
+
+                if (myItem.autoBidint > 0)
+                {
+                    var mygap = ((double)myItem.min_sell_price - (double)myItem.autoBidint) / (double)myItem.min_sell_price * 100;
+                    myItem.Gap_mybid = (int)mygap;
+                    if (myItem.Gap_mybid < MinGap)
+                    {
+                        //main gap and my gap below min
+                        //dont bid & cancell bids
+                        myItem.autoBidNotes = myItem.autoBidNotes + "Cancelled becasue of low gap with my bid | ";
+                        myItem.autoBidStr = "Cancel Bid";
+                     //   myItem.autoBidStr = "";
+                        myItem.autoBidint = 0;
+                    }
+                }
+         
+
+
+                if (myItem.autoBidint > before)
                     {
                         if (before == 0)
                         {
