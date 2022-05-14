@@ -39,7 +39,7 @@ namespace SteamBoat.Controllers
             _context = context;
         }
 
-        public IActionResult Domission(int id = 1003, bool grab=false) 
+        public IActionResult Domission(int id = 1004, bool grab=true) 
         {
 
             missionReportVM res = null;
@@ -314,6 +314,16 @@ namespace SteamBoat.Controllers
                     }
 
 
+                    //has bid remnanined the same?
+                    if (myItem.IdealBidInt == myItem.bid_price) 
+                    {
+                        myItem.IdealBid_Notes += " BID PRICE IS SAME AS START | ";
+                        myItem.IdealBidInt = 0;
+                        myItem.IdealBidStr = "";
+
+                    }
+
+
 
                     //Still got a value after checks?
                     if (myItem.IdealBidInt > 0)
@@ -329,7 +339,7 @@ namespace SteamBoat.Controllers
 
             }
             _context.SaveChanges();
-            var allItems2 = _context.Items.ToList();
+            var allItems2 = _context.Items.Where(ip => ip.IdealBidInt > 0 || ip.CancelCurrentBid == true).ToList();
             return View(allItems2);
         }
 
@@ -340,7 +350,7 @@ namespace SteamBoat.Controllers
             // 30 - 40
             if (myItem.StartingPrice <= 40)
             {
-                if (myGap >= 25)
+                if (myGap >= 23)
                 {
                     return true;
 
@@ -442,217 +452,7 @@ namespace SteamBoat.Controllers
         }
 
 
-            public IActionResult AutoBid2()
-        {
-
-            int MinGap = 23;
-            int MinActivity = 16;
-            int MinStartingPrice = 40;
-            int MaxStartingPrice = 800;
-            
-
-            var allItems = _context.Items.ToList();
-            foreach (var myItem in allItems)
-            {
-                myItem.autoBidint = 0;
-                myItem.autoBidStr = "";
-                myItem.autoBidNotes = "";
-                var before = myItem.bid_price;
-
-                //checker
-                if (myItem.Name.Contains("Prison"))
-                {
-
-                }
-
-
-              
-                    //POTENTIAL BID
-                    //we may want to bid
-                    //check we are not already top bid
-                 
-                    if ((myItem.Activity > MinActivity && myItem.StartingPrice > MinStartingPrice) || (myItem.IncludeInAutoBid == true) || (myItem.bid_price > 0)) 
-                    {
-                        //we may want to bid
-                        //check we are not already top bid
-
-                        if (myItem.bid_price >= myItem.bid1Price)
-                        {
-                            myItem.autoBidNotes = myItem.autoBidNotes + "We Top Bid | ";
-                            Console.WriteLine("Already top bid : " + myItem.Name + " = " + myItem.bid_price_in_pound);
-                            Console.WriteLine("Check gap below my bid (bigger than 1?)");
-                            var mybidshouldbe = myItem.bid2Price + 1;
-                            if (mybidshouldbe != myItem.bid1Price) 
-                            {
-                                if (myItem.bid1Quant > 1)
-                                {
-                                    Console.WriteLine("Cant reduce becasue others are also bidding the gap");
-
-                                }
-                                else
-                                {
-                                    myItem.autoBidNotes = myItem.autoBidNotes + "Reduce bid | ";
-                                    Console.WriteLine("Reduced bid from " + myItem.bid_price_in_pound);
-                                    myItem.autoBidint = myItem.bid2Price + 1;
-                                    decimal dec = Convert.ToDecimal(myItem.autoBidint);
-                                    dec = dec / 100;
-                                    myItem.autoBidStr = dec.ToString();
-                                    Console.WriteLine("to ... " + myItem.autoBidStr);
-                                }
-                            }
-
-                        } 
-                        else
-                        {
-
-                            if (myItem.bid1Quant == 1)
-                            {
-                                myItem.autoBidint = myItem.bid1Price;
-                            }
-                            else
-                            {
-                                myItem.autoBidint = myItem.bid1Price + 1;
-                            }
-
-
-                            //Check that the top bid isnt too high and making us pay too much (high hanging fruit)
-                            // gap over 8
-                            // starting price over 80
-                            // bid quant = 1
-
-                            if (myItem.Fruit2 > 15 && myItem.StartingPrice > 99 && myItem.bid1Quant == 1)
-                            {
-                                myItem.autoBidNotes = myItem.autoBidNotes + "HHF | ";
-                                //HHF!
-                                Console.WriteLine("HHF!! Reducing bid ...");
-                                myItem.autoBidint = myItem.bid2Price + 1;
-                                Console.WriteLine("to ..." + myItem.autoBidint.ToString());
-
-                            }
-                            else 
-                            {
-                                if (myItem.Fruit2 > 10 && myItem.StartingPrice > 199 && myItem.bid1Quant == 1)
-                                {
-                                    myItem.autoBidNotes = myItem.autoBidNotes + "HHF2 | ";
-                                    //HHF!
-                                    Console.WriteLine("HHF2!! Reducing bid ...");
-                                    myItem.autoBidint = myItem.bid2Price + 1;
-                                    Console.WriteLine("to ..." + myItem.autoBidint.ToString());
-
-                                }
-
-
-                            }
-
-
-
-                            
-                            
-
-
-                        }
-                    }
-              
-
-               
-                //FINAL CHECK
-                    if (myItem.autoBidint != before)
-                    {
-                        Console.WriteLine("bid started " + before.ToString() + " is now " + myItem.autoBidint.ToString());
-                        if (myItem.autoBidint > 10 && myItem.autoBidint < 700)
-                        {
-
-                            decimal dec = Convert.ToDecimal(myItem.autoBidint);
-                            dec = dec / 100;
-                            myItem.autoBidStr = dec.ToString();
-                        }
-                        else
-                        {
-                        if (myItem.autoBidint == 0) { 
-                            Console.WriteLine("ero bid = " + myItem.autoBidint.ToString());
-                            myItem.autoBidStr = "";
-                            myItem.autoBidint = 0;
-                        }
-                        else
-                        {
-                            myItem.autoBidNotes = myItem.autoBidNotes + "INVALID BID = " + myItem.autoBidint.ToString() + " | ";
-                            Console.WriteLine("INVALID BID! = " + myItem.autoBidint.ToString());
-                            myItem.autoBidStr = "";
-                            myItem.autoBidint = 0;
-                        }
-
-                        }
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Bid remained the same after changes, Ignored : " + myItem.autoBidint.ToString());
-                        myItem.autoBidStr = "";
-                        myItem.autoBidint = 0;
-
-
-                    }
-
-
-
-                if (myItem.autoBidint > 0)
-                {
-                    var mygap = ((double)myItem.min_sell_price - (double)myItem.autoBidint) / (double)myItem.min_sell_price * 100;
-                    myItem.Gap_mybid = (int)mygap;
-                    if (myItem.Gap_mybid < MinGap)
-                    {
-                        //main gap and my gap below min
-                        //dont bid & cancell bids
-                        myItem.autoBidNotes = myItem.autoBidNotes + "Cancelled becasue of low gap with my bid | ";
-                        myItem.autoBidStr = "Cancel Bid";
-                     //   myItem.autoBidStr = "";
-                        myItem.autoBidint = 0;
-                    }
-                }
          
-
-
-                if (myItem.autoBidint > before)
-                    {
-                        if (before == 0)
-                        {
-                            myItem.autoBidNotes = "NEW BID | " + before.ToString() + " to " + myItem.autoBidint.ToString() + " | " + myItem.autoBidNotes;
-                        }
-                        else
-                        {
-                            myItem.autoBidNotes = "INCREASED BID | " + before.ToString() + " to " + myItem.autoBidint.ToString() + " | " + myItem.autoBidNotes;
-                        }
-                    }
-                    else if (myItem.autoBidint == before)
-                    {
-                        myItem.autoBidNotes = "BID KEPT | " + before.ToString() + " to " + myItem.autoBidint.ToString() + " | " + myItem.autoBidNotes  ;
-
-                    }
-                    else if (myItem.autoBidint < before)
-                    {
-                        if (myItem.autoBidint == 0)
-                        {
-                            myItem.autoBidNotes = "CANCELLED BID | " + before.ToString() + " to " + myItem.autoBidint.ToString() + " | " + myItem.autoBidNotes;
-                        }
-                        else
-                        {
-                            myItem.autoBidNotes = "DECREASED BID | " + before.ToString() + " to " + myItem.autoBidint.ToString() + " | " + myItem.autoBidNotes;
-                        }
-
-                    }
-
-            }
-
-            _context.SaveChanges();
-
-            //_SteamBoatService.PostBids();
-
-
-
-            return Content("OK");
-
-
-        }    
 
 
                 public IActionResult ReadBuyOrders() 

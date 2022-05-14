@@ -121,11 +121,6 @@ namespace SteamBoat.Models
         public int sell5Price { get; set; }
         public int sell5Quant { get; set; }
 
-        public int autoBidint { get; set; }
-        public string autoBidStr { get; set; }
-
-        public  string autoBidNotes { get; set; }
-
         public bool IncludeInAutoBid { get; set; }
 
         public bool CancelCurrentBid { get; set; }
@@ -134,6 +129,10 @@ namespace SteamBoat.Models
 
         public string IdealBid_Notes { get; set; }
 
+        public int IdealSellInt { get; set; }
+        public String IdealSellStr { get; set; }
+
+        public string IdealSell_Notes { get; set; }
 
 
         [ForeignKey("Game_hash_name_key")]

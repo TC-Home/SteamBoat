@@ -867,7 +867,7 @@ namespace SteamBoat.Services
         public List<Item> GetLHFS(int lowest = 10) 
         {
 
-            var myLHFs = _context.Items.Where(w => w.Fruit > lowest).Where(a => a.Activity > 40).OrderByDescending(o => o.Fruit).ToList();
+            var myLHFs = _context.Items.Where(w => w.Fruit > lowest).Where(a => a.Activity > 15).OrderByDescending(o => o.Fruit).ToList();
             return myLHFs;
         
         }
@@ -1248,6 +1248,7 @@ namespace SteamBoat.Services
             options.AddArgument("--disable-blink-features=AutomationControlled");
             var driver = new ChromeDriver(options);
 
+            //var allItems = _context.Items.Where(g => g.Game.Contains("outer")).ToList();
             var allItems = _context.Items.ToList();
 
             foreach (var myItem in allItems)
@@ -1315,10 +1316,14 @@ namespace SteamBoat.Services
                 RandomWait(1, 10);
                 price_box.SendKeys(Keys.Backspace);
                 RandomWait(10, 28);
-                if (myItem.IdealBidInt > 800 || myItem.IdealBidStr.Substring(1, 1) != ".")
+                if (myItem.IdealBidInt != 100 && myItem.IdealBidInt != 200 && myItem.IdealBidInt != 300 && myItem.IdealBidInt != 400 && myItem.IdealBidInt != 500 && myItem.IdealBidInt != 600 && myItem.IdealBidInt != 700 && myItem.IdealBidInt != 800)
                 {
+                    if (myItem.IdealBidInt > 800 || myItem.IdealBidStr.Substring(1, 1) != ".")
+                    {
+                      
                     //somethings not right
                     throw new Exception("Bid amount looks wrong!");
+                    }
                 }
                 price_box.SendKeys(myItem.IdealBidStr);
                 var terms = driver.FindElement(By.Id("market_buyorder_dialog_accept_ssa"));
@@ -1337,9 +1342,9 @@ namespace SteamBoat.Services
                 myItem.IdealBidStr = "";
                 _context.SaveChanges();
             }
-            catch 
+            catch (Exception ex)
             {
-                Console.WriteLine("**************** FAIL GRABBING PAGE!! ***********************");
+                Console.WriteLine("**************** FAIL PLACING BID!! ***********************" + ex.Message) ;
                 RandomWait(99, 100);
                 
             }
