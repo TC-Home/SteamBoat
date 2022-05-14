@@ -65,5 +65,7 @@ namespace SteamBoat.Interfaces
 
         public string PostBids();
 
+        public string PostSells();
+
     }
 }

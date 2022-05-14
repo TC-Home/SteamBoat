@@ -194,4 +194,14 @@ namespace SteamBoat.Models
         public string Game { get; set; }
 
     }
+
+    public class bids 
+    {
+        public int bid_order { get; set; }
+        public int bid_int { get; set; }
+        public int bid_quant { get; set; }
+
+        public int bid_fruit { get; set; }
+
+    }
 }

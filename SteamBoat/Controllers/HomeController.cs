@@ -115,7 +115,7 @@ namespace SteamBoat.Controllers
         {
 
             
-     // return RedirectToAction("AutoBid");
+      return RedirectToAction("PostSells");
             //   var allItems = _context.Items.ToList();
             //    foreach (var myItem in allItems) 
             //    {
@@ -136,9 +136,117 @@ namespace SteamBoat.Controllers
 
             return Content("OK");
         }
-        
+        public IActionResult PostSells()
+        {
+            _SteamBoatService.PostSells();
 
-        public IActionResult AutoBid()
+            return Content("OK");
+        }
+
+        public IActionResult AutoSell()
+        {
+            
+            
+
+
+            var allItems = _context.Items.ToList();
+            foreach (var myItem in allItems)
+            {
+                myItem.IdealSell_Notes = "";
+                myItem.IdealSellInt = 0;
+                myItem.IdealSellStr = "";
+                var currentbids = new List<bids>();
+
+
+                //GET BIDS AND WORK OUT LHF
+                currentbids.Add(new bids() { bid_order = 1, bid_int = myItem.sell1Price, bid_quant = myItem.bid1Quant, bid_fruit = (int)(((double)myItem.sell2Price - (double)myItem.sell1Price) / (double)myItem.sell2Price * 100) });
+                currentbids.Add(new bids() { bid_order = 2, bid_int = myItem.sell2Price, bid_quant = myItem.bid2Quant, bid_fruit = (int)(((double)myItem.sell3Price - (double)myItem.sell2Price) / (double)myItem.sell3Price * 100) });
+                currentbids.Add(new bids() { bid_order = 3, bid_int = myItem.sell3Price, bid_quant = myItem.bid3Quant });
+                currentbids.Add(new bids() { bid_order = 4, bid_int = myItem.sell4Price, bid_quant = myItem.bid4Quant });
+                currentbids.Add(new bids() { bid_order = 5, bid_int = myItem.sell5Price, bid_quant = myItem.bid5Quant });
+
+
+
+                Console.WriteLine(myItem.Name + "\t Sell : " + currentbids[0].bid_int + "(" + currentbids[0].bid_quant +  ")," + currentbids[1].bid_int + "(" + currentbids[1].bid_quant + ")," + currentbids[2].bid_int + "(" + currentbids[2].bid_quant + ")," + currentbids[3].bid_int + "(" + currentbids[3].bid_quant + ")," + currentbids[4].bid_int + "(" + currentbids[4].bid_quant + ")," + "\t : Fruits = \t" + currentbids[0].bid_fruit + "," + currentbids[1].bid_fruit);
+
+
+                //remove my sales
+                var mySales = _context.ItemsForSale.Where(w => w.Game_hash_name_key == myItem.hash_name_key).OrderBy(o => o.sale_price).ToList();
+
+                if (mySales.Count > 1) 
+                {
+                    foreach (var mySale in mySales) 
+                    {
+
+                        var myMatch = currentbids.Where(b => b.bid_int == mySale.sale_price).SingleOrDefault();
+                        if (myMatch != null) 
+                        {
+                            Console.WriteLine("Found a Sell(s) thats mine, removing ...");
+                            myMatch.bid_quant = myMatch.bid_quant - 1;
+                            Console.WriteLine(myItem.Name + "\t Sell : " + currentbids[0].bid_int + "(" + currentbids[0].bid_quant + ")," + currentbids[1].bid_int + "(" + currentbids[1].bid_quant + ")," + currentbids[2].bid_int + "(" + currentbids[2].bid_quant + ")," + currentbids[3].bid_int + "(" + currentbids[3].bid_quant + ")," + currentbids[4].bid_int + "(" + currentbids[4].bid_quant + ")," + "\t : Fruits = \t" + currentbids[0].bid_fruit + "," + currentbids[1].bid_fruit);
+
+                        }
+                        
+
+                    
+                    }
+                
+                }
+
+                //Decide the price
+
+                var myPrice = 0;
+                int cnt = 0;
+
+
+
+                do
+                {
+                    var tryThis = currentbids[cnt];
+
+                    if (FruitGood(myItem, tryThis.bid_fruit))
+                    {
+                        //fruit is good
+                        if (WallGood(myItem, tryThis.bid_quant))
+                        {
+                            //prepared to share top spot
+                            myPrice = tryThis.bid_int;
+                        }
+                        else
+                        {
+                            //not prepared to share
+                            myPrice = tryThis.bid_int - 1;
+                        }
+
+                    }
+                    else 
+                    { 
+                    //failed fruiti!
+                    }
+
+                    cnt++;
+                    if (cnt == 5) 
+                    {
+                    //EEK no price!
+
+                    
+                    }
+
+                } while (myPrice == 0);
+                myItem.IdealSellInt = myPrice;
+                //Got a sell make a str
+                decimal dec = Convert.ToDecimal(myItem.IdealSellInt);
+                dec = dec / 100;
+                myItem.IdealSellStr = dec.ToString();
+
+
+            }
+            _context.SaveChanges();
+            return Content("OK");
+        }
+
+
+                public IActionResult AutoBid()
         {
             var allItems = _context.Items.ToList();
             foreach (var myItem in allItems)
@@ -409,7 +517,64 @@ namespace SteamBoat.Controllers
         }
 
 
-        bool ActivityGood(Item myItem) 
+
+        bool WallGood(Item myItem, int quant) 
+        {
+
+            if (quant == 1 && myItem.Activity > 29) 
+            {
+                return true;
+            
+            }
+            if (quant == 2 && myItem.Activity > 60)
+            {
+                return true;
+
+            }
+            if (quant == 3 && myItem.Activity > 120)
+            {
+                return true;
+
+            }
+            if (quant == 4 && myItem.Activity > 200)
+            {
+                return true;
+
+            }
+            if (quant < 8 && myItem.Activity > 300)
+            {
+                return true;
+
+            }
+
+            return false;
+
+        }
+
+
+
+
+        bool FruitGood(Item myItem, int sellfruit)
+        {
+            if (myItem.StartingPrice < 65)
+            {
+                //dont care about fruit at this level
+                return true;
+            }
+
+            if (sellfruit < 10) 
+            {
+
+                return true;
+            }
+
+            return false;
+
+        }
+
+
+             
+            bool ActivityGood(Item myItem) 
         {
             if (myItem.StartingPrice < 50)
             {
