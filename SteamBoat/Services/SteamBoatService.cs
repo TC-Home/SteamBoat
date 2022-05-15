@@ -1248,10 +1248,11 @@ namespace SteamBoat.Services
             options.AddArgument("--disable-blink-features=AutomationControlled");
             List<string> markets = new List<string>
             {
-                "https://steamcommunity.com/profiles/76561198024474411/inventory#753",
+               
                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#232090",
                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#227300",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#250820"
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#250820",
+                 "https://steamcommunity.com/profiles/76561198024474411/inventory#753"
 
             };
 
@@ -1260,7 +1261,7 @@ namespace SteamBoat.Services
 
             foreach (var MarketUrl in markets)
             {
-
+               
                 var driver = new ChromeDriver(options);
                 driver.Url = MarketUrl;
                 RandomWait(30, 40);
@@ -1272,9 +1273,13 @@ namespace SteamBoat.Services
                 {
                     //do we have any?
 
-                    var tick_marketable = driver.FindElement(By.Id("tag_filter_753_6_misc_marketable"));
+                    // var tick_marketable = driver.FindElement(By.Id("tag_filter_753_6_misc_marketable"));
+                    var tick_marketable = driver.FindElement(By.CssSelector("[id*='_misc_marketable']"));
+
+                    // var tick_marketable = driver.FindElement(By.Id("input[id*=_misc_marketable]"));
                     RandomWait(10, 40);
                     tick_marketable.Click();
+
                     var items = driver.FindElements(By.ClassName("itemHolder"));
                     RandomWait(5, 20);
                     foreach (var singleItem in items)
@@ -1363,7 +1368,7 @@ namespace SteamBoat.Services
                             OK.Click();
                             RandomWait(95, 99);
 
-
+                        
 
 
 
@@ -1372,15 +1377,16 @@ namespace SteamBoat.Services
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     //dont have any, OK
+                    Console.WriteLine("******* ERROR : " + ex.Message);
                 }
 
                 driver.Close();
-                return "OK";
+               
             }
-            return "No URLS";
+            return "OK";
         }
 
 

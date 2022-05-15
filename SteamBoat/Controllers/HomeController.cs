@@ -115,7 +115,7 @@ namespace SteamBoat.Controllers
         {
 
             
-      return RedirectToAction("PostSells");
+      //return RedirectToAction("PostSells");
             //   var allItems = _context.Items.ToList();
             //    foreach (var myItem in allItems) 
             //    {
@@ -447,6 +447,25 @@ namespace SteamBoat.Controllers
 
             }
             _context.SaveChanges();
+
+            //stop any bids on excluded games
+            var gamestoexclude = _context.exclude.ToList();
+            foreach (var excludeme in gamestoexclude)
+            {
+                var matches = _context.Items.Where(g => g.Game == excludeme.Game).ToList();
+                foreach (var delme in matches)
+                {
+
+                    delme.IdealBidInt = 0;
+                    delme.IdealBidStr = "";
+
+                }
+
+
+            }
+            _context.SaveChanges();
+
+
             var allItems2 = _context.Items.Where(ip => ip.IdealBidInt > 0 || ip.CancelCurrentBid == true).ToList();
             return View(allItems2);
         }
