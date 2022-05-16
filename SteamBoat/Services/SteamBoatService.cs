@@ -1248,11 +1248,11 @@ namespace SteamBoat.Services
             options.AddArgument("--disable-blink-features=AutomationControlled");
             List<string> markets = new List<string>
             {
-               
+                "https://steamcommunity.com/profiles/76561198024474411/inventory#753",
                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#232090",
                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#227300",
                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#250820",
-                 "https://steamcommunity.com/profiles/76561198024474411/inventory#753"
+                
 
             };
 
@@ -1261,6 +1261,7 @@ namespace SteamBoat.Services
 
             foreach (var MarketUrl in markets)
             {
+                bool done = false;
                
                 var driver = new ChromeDriver(options);
                 driver.Url = MarketUrl;
@@ -1269,120 +1270,152 @@ namespace SteamBoat.Services
                 RandomWait(10, 20);
                 filter_button.Click();
                 RandomWait(10, 20);
+
+                //do we have any?
                 try
                 {
-                    //do we have any?
-
                     // var tick_marketable = driver.FindElement(By.Id("tag_filter_753_6_misc_marketable"));
                     var tick_marketable = driver.FindElement(By.CssSelector("[id*='_misc_marketable']"));
 
                     // var tick_marketable = driver.FindElement(By.Id("input[id*=_misc_marketable]"));
                     RandomWait(10, 40);
                     tick_marketable.Click();
-
-                    var items = driver.FindElements(By.ClassName("itemHolder"));
-                    RandomWait(5, 20);
-                    foreach (var singleItem in items)
+                    do
                     {
-                        if (singleItem.Displayed == true)
+                        try
                         {
-
-
-
-
-
+                            var items = driver.FindElements(By.ClassName("itemHolder"));
                             RandomWait(5, 20);
-                            singleItem.Click();
-                            RandomWait(10, 30);
-
-                            var myLink = driver.FindElement(By.LinkText("View in Community Market"));
-                            var url = myLink.GetAttribute("href");
-                            string[] split = url.Split("/");
-                            var hash = HttpUtility.UrlDecode(split[split.Length - 1]);
-
-                            var sellbuttons = driver.FindElements(By.ClassName("item_market_action_button_green"));
-                            RandomWait(30, 50);
-                            foreach (var butt in sellbuttons)
+                            int cnt = 0;
+                            foreach (var singleItem in items)
                             {
-                                if (butt.Displayed == true)
-                                {
-                                    butt.Click();
-                                }
-
-                            }
-
-                            RandomWait(20, 40);
-                            var price_box = driver.FindElement(By.Id("market_sell_buyercurrency_input"));
-                            RandomWait(3, 10);
-                            price_box.SendKeys(Keys.Backspace);
-                            RandomWait(1, 6);
-                            //use 900 so zero is never used in error
-                            var myprice = "9.0";
-                            var myItem = _context.Items.Where(h => h.hash_name_key == hash).SingleOrDefault();
-
-                            if (myItem == null)
-                            {
-                                throw new Exception("CaNT FIND ITEM  : " + hash);
-                            }
-
-                            //We have an item
-                            myprice = myItem.IdealSellStr;
-
-                            if (myItem.IdealSellInt != 100 && myItem.IdealSellInt != 200 && myItem.IdealSellInt != 300 && myItem.IdealSellInt != 400 && myItem.IdealSellInt != 500 && myItem.IdealSellInt != 600 && myItem.IdealSellInt != 700 && myItem.IdealSellInt != 800)
-                            {
-                                if (myItem.IdealSellInt > 800 || myItem.IdealSellStr.Substring(1, 1) != ".")
+                                if (singleItem.Displayed == true)
                                 {
 
-                                    //somethings not right
-                                    throw new Exception("SELL amount looks wrong!");
+
+
+
+
+                                    RandomWait(1, 5);
+                                    singleItem.Click();
+                                    RandomWait(5, 15);
+
+                                    var myLink = driver.FindElement(By.LinkText("View in Community Market"));
+                                    var url = myLink.GetAttribute("href");
+                                    string[] split = url.Split("/");
+                                    var hash = HttpUtility.UrlDecode(split[split.Length - 1]);
+
+                                    var sellbuttons = driver.FindElements(By.ClassName("item_market_action_button_green"));
+                                    RandomWait(10, 20);
+                                    Console.WriteLine(sellbuttons.Count().ToString() + " Sell buttons");
+                                    foreach (var butt in sellbuttons)
+                                    {
+                                        if (butt.Displayed == true)
+                                        {
+                                            butt.Click();
+                                        }
+
+
+                                    }
+
+                                    RandomWait(10, 20);
+                                    var price_box = driver.FindElement(By.Id("market_sell_buyercurrency_input"));
+                                    RandomWait(3, 10);
+                                    price_box.SendKeys(Keys.Backspace);
+                                    RandomWait(1, 6);
+                                    //use 900 so zero is never used in error
+                                    var myprice = "9.0";
+                                    var myItem = _context.Items.Where(h => h.hash_name_key == hash).SingleOrDefault();
+
+                                    if (myItem == null)
+                                    {
+                                        throw new Exception("CaNT FIND ITEM  : " + hash);
+                                    }
+
+                                    //We have an item
+                                    myprice = myItem.IdealSellStr;
+
+                                    if (myItem.IdealSellInt != 100 && myItem.IdealSellInt != 200 && myItem.IdealSellInt != 300 && myItem.IdealSellInt != 400 && myItem.IdealSellInt != 500 && myItem.IdealSellInt != 600 && myItem.IdealSellInt != 700 && myItem.IdealSellInt != 800)
+                                    {
+                                        if (myItem.IdealSellInt > 800 || myItem.IdealSellStr.Substring(1, 1) != ".")
+                                        {
+
+                                            //somethings not right
+                                            throw new Exception("SELL amount looks wrong!");
+                                        }
+                                    }
+                                    RandomWait(8, 16);
+                                    myprice = myItem.IdealSellStr;
+                                    RandomWait(11, 23);
+                                    price_box.SendKeys(myprice);
+                                    var terms = driver.FindElement(By.Id("market_sell_dialog_accept_ssa"));
+                                    RandomWait(5, 20);
+                                    if (terms.Selected == false)
+                                    {
+                                        terms.Click();
+                                    }
+                                    RandomWait(10, 20);
+
+
+
+
+                                    var placeorder = driver.FindElements(By.Id("market_sell_dialog_accept"));
+                                    RandomWait(5, 10);
+                                    placeorder[placeorder.Count - 1].Click();
+                                    RandomWait(40, 80);
+
+                                    var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
+                                    RandomWait(5, 10);
+                                    placeorderConfirm.Click();
+                                    RandomWait(30, 50);
+
+
+                                    var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
+                                    RandomWait(5, 12);
+                                    OK.Click();
+                                    cnt++;
+                                    RandomWait(55, 79);
+
+
+
+
+
+
+
                                 }
                             }
-                            RandomWait(8, 16);
-                            myprice = myItem.IdealSellStr;
-                            RandomWait(11, 23);
-                            price_box.SendKeys(myprice);
-                            var terms = driver.FindElement(By.Id("market_sell_dialog_accept_ssa"));
-                            RandomWait(5, 20);
-                            if (terms.Selected == false)
+                            if (cnt == 25)
                             {
-                                terms.Click();
+                                try
+                                {
+                                    var nextbutton = driver.FindElement(By.Id("pagebtn_next"));
+                                    nextbutton.Click();
+                                }
+                                catch
+                                {
+
+                                    done = true;
+                                }
+
+
+                                //more to do
                             }
-                            RandomWait(10, 20);
-
-
-
-
-                            var placeorder = driver.FindElements(By.Id("market_sell_dialog_accept"));
-                            RandomWait(5, 10);
-                            placeorder[placeorder.Count - 1].Click();
-                            RandomWait(40, 80);
-
-                            var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
-                            RandomWait(5, 10);
-                            placeorderConfirm.Click();
-                            RandomWait(75, 89);
-
-
-                            var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
-                            RandomWait(10, 20);
-                            OK.Click();
-                            RandomWait(95, 99);
-
-                        
-
-
-
-
-
+                            else
+                            {
+                                done = true;
+                            }
                         }
-                    }
+                        catch (Exception ex)
+                        {
+                            //dont have any, OK
+                            Console.WriteLine("******* ERROR : " + ex.Message);
+                        }
+                    } while (done == false);
                 }
-                catch (Exception ex)
+                catch 
                 {
-                    //dont have any, OK
-                    Console.WriteLine("******* ERROR : " + ex.Message);
+                //NO market check box
                 }
-
                 driver.Close();
                
             }

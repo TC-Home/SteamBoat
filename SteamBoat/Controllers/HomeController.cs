@@ -138,7 +138,9 @@ namespace SteamBoat.Controllers
         }
         public IActionResult PostSells()
         {
-            _SteamBoatService.PostSells();
+           
+                _SteamBoatService.PostSells();
+          
 
             return Content("OK");
         }
