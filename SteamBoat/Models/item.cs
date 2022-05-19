@@ -134,6 +134,11 @@ namespace SteamBoat.Models
 
         public string IdealSell_Notes { get; set; }
 
+        public DateTime LastSellDate { get; set; }
+        public int LastSellInt { get; set; }
+
+        public int LastProfitInt { get; set; }
+
 
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }

@@ -115,7 +115,7 @@ namespace SteamBoat.Controllers
         {
 
             
-      //return RedirectToAction("PostSells");
+      //return RedirectToAction("Hour24");
             //   var allItems = _context.Items.ToList();
             //    foreach (var myItem in allItems) 
             //    {
@@ -144,6 +144,69 @@ namespace SteamBoat.Controllers
 
             return Content("OK");
         }
+
+        public IActionResult Hour24() 
+        {
+
+            var sells24 = _context.Transactions.Where(t => t.DateT > DateTime.Now.AddHours(-24) && t.type.ToString()=="-").ToList();
+            //var trans24 = _context.Transactions.Where(t => t.type.ToString() == "-").ToList();
+
+            foreach (var sells in sells24) 
+            {
+            
+                //find likely buy
+                var buys = _context.Transactions.Where(t => t.DateT < DateTime.Now.AddDays(-7) && t.type.ToString() == "+" && t.Game_hash_name_key == sells.Game_hash_name_key).OrderByDescending(o=> o.DateT).ToList();
+                if (buys.Count() < 1) 
+                {
+
+                    //ERROR!!!!
+                    Console.WriteLine("** ERROR HAVE A SELL BUT NO BUY!");
+                    throw new Exception("EROR");
+                }
+
+                var myItem = _context.Items.Where(i => i.hash_name_key == sells.Game_hash_name_key).SingleOrDefault();
+                myItem.LastSellDate = sells.DateT;
+                myItem.LastSellInt = buys[0].int_sale_price_after_fees;
+                myItem.LastProfitInt = sells.int_sale_price_after_fees - buys[0].int_sale_price_after_fees;
+                _context.SaveChanges();
+                Console.WriteLine(buys.Count());
+            }
+
+
+            var myItems = _context.Items.Where(l => l.LastSellDate == DateTime.Today).ToList();
+
+            ViewBag.NumberofSales = myItems.Count();
+
+            var intSumofSales = 0;
+            var intSumofProf = 0;
+
+            foreach (var i in myItems) 
+            {
+
+                intSumofSales = intSumofSales + i.LastSellInt;
+                intSumofProf = intSumofProf + i.LastProfitInt;
+
+
+            }
+            decimal dec = Convert.ToDecimal(intSumofProf);
+            dec = dec / 100;
+            ViewBag.SumofProfStr = "£" + dec.ToString();
+            ViewBag.SumofProfInt = intSumofProf;
+
+            var AveProfit = (int)((double)intSumofProf / (double)myItems.Count());
+
+
+            decimal dec2 = Convert.ToDecimal(AveProfit);
+            dec2 = dec2 / 100;
+            ViewBag.AveProfitStr = "£" + dec2.ToString();
+            ViewBag.AveProfitInt = AveProfit;
+
+
+
+            return View(myItems);
+            
+        }
+
 
         public IActionResult AutoSell()
         {
@@ -433,6 +496,20 @@ namespace SteamBoat.Controllers
 
                     }
 
+                    //get rid of excludes
+                    foreach (var excl in _context.exclude.ToList())
+                    {
+                        if (myItem.Game == excl.Game) 
+                        {
+                            myItem.IdealBid_Notes += " EXCLUDED GAME REMOVED | ";
+                            myItem.IdealBidInt = 0;
+                            myItem.IdealBidStr = "";
+
+                        } 
+
+
+                    }
+
 
 
                     //Still got a value after checks?
@@ -448,6 +525,11 @@ namespace SteamBoat.Controllers
 
 
             }
+            
+
+
+
+
             _context.SaveChanges();
 
             //stop any bids on excluded games
@@ -477,9 +559,9 @@ namespace SteamBoat.Controllers
         bool GapGood(int myGap, Item myItem)
         {
             // 30 - 40
-            if (myItem.StartingPrice <= 40)
+            if (myItem.StartingPrice <= 50)
             {
-                if (myGap >= 23)
+                if (myGap >= 24)
                 {
                     return true;
 
@@ -494,7 +576,7 @@ namespace SteamBoat.Controllers
             // 41 - 75
             if (myItem.StartingPrice <= 75)
             {
-                if (myGap >= 22)
+                if (myGap >= 23)
                 {
                     return true;
 
@@ -508,7 +590,7 @@ namespace SteamBoat.Controllers
             }
 
             // 76 +
-            if (myGap >= 20)
+            if (myGap >= 22)
                 {
                     return true;
 
@@ -1140,7 +1222,8 @@ namespace SteamBoat.Controllers
 
 
             _SteamBoatService.UpdateTrans();
-            return Content("OK");
+            return RedirectToAction("Hour24");
+            //return Content("OK");
 
 
         }

@@ -61,7 +61,7 @@ namespace SteamBoat.Services
 
             //we have a mission
             //Grap all the pages/jsons in the mission-feederurls
-            var myUrls = _context.FeederUrl.Where(u => u.MissionId == mymission.MissionId).OrderBy(o => o.FeederId);
+            var myUrls = _context.FeederUrl.Where(u => u.MissionId == mymission.MissionId).OrderByDescending(o => o.FeederId);
 
             if (!myUrls.Any()) 
             {
@@ -619,7 +619,18 @@ namespace SteamBoat.Services
           //  }
 
             var myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
+            if (myStats.Fail == true) 
+            {
+                //try again:
+                myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
 
+            }
+
+            if (myStats.JSON == null) 
+            {
+                Console.WriteLine(" ###### Couldnt get Json : " + myItem.hash_name_key + " " + myItem.Name);
+                return "OK";
+            }
 
             var myJSOObject = JObject.Parse(myStats.JSON);
 
@@ -691,7 +702,7 @@ namespace SteamBoat.Services
                     var price = sellrows["price"];
                     int intprice = int.Parse(price.ToString().Replace("£0.0", "").Replace("£0.", "").Replace("£", "").Replace(".", ""));
                     var quant = sellrows["quantity"];
-                    int intquant = int.Parse(quant.ToString());
+                    int intquant = int.Parse(quant.ToString().Replace(",",""));
 
 
                     if (cnt == 0)
@@ -1289,12 +1300,9 @@ namespace SteamBoat.Services
                             int cnt = 0;
                             foreach (var singleItem in items)
                             {
+                                Console.Write("ITEM: " + cnt.ToString());
                                 if (singleItem.Displayed == true)
                                 {
-
-
-
-
 
                                     RandomWait(1, 5);
                                     singleItem.Click();
@@ -1364,21 +1372,74 @@ namespace SteamBoat.Services
                                     placeorder[placeorder.Count - 1].Click();
                                     RandomWait(40, 80);
 
-                                    var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
-                                    RandomWait(5, 10);
-                                    placeorderConfirm.Click();
-                                    RandomWait(30, 50);
+                                    try
+                                    {
+                                        //try twice
+                                        var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
+                                        RandomWait(5, 10);
+                                        placeorderConfirm.Click();
+                                        RandomWait(10, 15);
+                                    }
+                                    catch 
+                                    {
+                                        Console.WriteLine("SECOND GO AT SELL BUTTON!");
+                                        var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
+                                        RandomWait(25, 40);
+                                        placeorderConfirm.Click();
+                                        RandomWait(30, 50);
+
+                                    }
+
+                                    try
+                                    {
+                                        Console.WriteLine("FIRST GO AT OK BUTTON!");
+                                        RandomWait(80, 90);
+                                        var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
+                                        OK.Click();
+
+                                        RandomWait(55, 79);
+                                    }
+                                    catch
+                                    {
+                                        try
+                                        {
+                                            Console.WriteLine("SECOND GO AT OK BUTTON!");
+                                            RandomWait(55, 79);
+                                            var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
+                                            RandomWait(15, 22);
+                                            OK.Click();
+
+                                            RandomWait(15, 39);
+                                        }
+                                        catch 
+                                        {
+                                            try
+                                            {
+                                                Console.WriteLine("THIRD GO AT OK BUTTON!");
+                                                RandomWait(90, 95);
+                                                RandomWait(90, 95);
+                                                var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
+                                                RandomWait(55, 77);
+                                                OK.Click();
+
+                                                RandomWait(15, 39);
+                                            }
+                                            catch {
+                                                Console.WriteLine("FOURTH GO AT OK BUTTON!");
+                                                RandomWait(90, 95);
+                                                RandomWait(90, 95);
+                                                var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
+                                                RandomWait(55, 77);
+                                                OK.Click();
+
+                                                RandomWait(15, 39);
+
+                                            }
+                                        }
+                                    }
 
 
-                                    var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
-                                    RandomWait(5, 12);
-                                    OK.Click();
-                                    cnt++;
-                                    RandomWait(55, 79);
-
-
-
-
+ cnt++;
 
 
 
