@@ -30,7 +30,7 @@ namespace SteamBoat.Controllers
         private readonly IContentGrabberService _ContentGrabberService;
         private readonly ISteamBoatService _SteamBoatService;
 
-        public HomeController(SteamBoatContext context,ISteamBoatService SteamBoatService,ILogger<HomeController> logger, IContentGrabberDataService ContentGrabberDataService, IContentGrabberService ContentGrabberService)
+        public HomeController(SteamBoatContext context, ISteamBoatService SteamBoatService, ILogger<HomeController> logger, IContentGrabberDataService ContentGrabberDataService, IContentGrabberService ContentGrabberService)
         {
             _logger = logger;
             _ContentGrabberDataService = ContentGrabberDataService;
@@ -39,7 +39,7 @@ namespace SteamBoat.Controllers
             _context = context;
         }
 
-        public IActionResult Domission(int id = 1004, bool grab=true) 
+        public IActionResult Domission(int id = 1004, bool grab = true)
         {
 
             missionReportVM res = null;
@@ -60,7 +60,7 @@ namespace SteamBoat.Controllers
             {
                 string res = _SteamBoatService.LHFandGaps(Freshness.Fresh);
             }
-            else 
+            else
             {
                 string res = _SteamBoatService.LHFandGaps(Freshness.AnyCached);
             }
@@ -68,7 +68,7 @@ namespace SteamBoat.Controllers
             return View(myLHfs);
         }
 
-        public IActionResult x() 
+        public IActionResult x()
         {
 
             for (int i = 10000; i < 43100; i = i + 100)
@@ -78,26 +78,26 @@ namespace SteamBoat.Controllers
                 feed.MissionId = 1002;
                 feed.isJSON = true;
                 feed.Url = "https://steamcommunity.com/market/search/render/?q=&start=" + i.ToString() + "&count=100&category_753_Game%5B%5D=any&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_cardborder%5B%5D=tag_cardborder_1&appid=753&sort_column=price&currency=2&norender=1";
-             //   _context.FeederUrl.Add(feed);
-             //   _context.SaveChanges();
+                //   _context.FeederUrl.Add(feed);
+                //   _context.SaveChanges();
             }
-            
+
 
 
 
 
 
             return Ok();
-        
+
         }
 
-        public IActionResult CheckBids() 
+        public IActionResult CheckBids()
         {
 
             var items = _SteamBoatService.GetAllItems();
             var bids = items.Where(b => b.bid_price != 0).ToList();
             return View("/views/home/items.cshtml", bids);
-        
+
         }
         public IActionResult Gaps(bool grab = false)
         {
@@ -105,7 +105,7 @@ namespace SteamBoat.Controllers
             {
                 string res = _SteamBoatService.LHFandGaps(Freshness.Fresh);
             }
-            
+
             var myGaps = _SteamBoatService.GetGaps();
 
             return View(myGaps);
@@ -114,8 +114,8 @@ namespace SteamBoat.Controllers
         public IActionResult Index()
         {
 
-            
-      //return RedirectToAction("Hour24");
+
+            //return RedirectToAction("Hour24");
             //   var allItems = _context.Items.ToList();
             //    foreach (var myItem in allItems) 
             //    {
@@ -128,7 +128,7 @@ namespace SteamBoat.Controllers
             return View();
 
 
-            }
+        }
 
         public IActionResult PostBids()
         {
@@ -138,25 +138,41 @@ namespace SteamBoat.Controllers
         }
         public IActionResult PostSells()
         {
-           
-                _SteamBoatService.PostSells();
-          
+
+            _SteamBoatService.PostSells();
+
 
             return Content("OK");
         }
 
-        public IActionResult Hour24() 
+        public IActionResult Hour24()
         {
 
-            var sells24 = _context.Transactions.Where(t => t.DateT > DateTime.Now.AddHours(-24) && t.type.ToString()=="-").ToList();
-            //var trans24 = _context.Transactions.Where(t => t.type.ToString() == "-").ToList();
 
-            foreach (var sells in sells24) 
+            var sells24 = _context.Transactions.Where(t => t.DateT > DateTime.Now.AddHours(-24) && t.type.ToString() == "-").ToList();
+            //var sells24 = _context.Transactions.Where(t => t.DateT == DateTime.Today && t.type.ToString() == "-").ToList();
+
+            //var trans24 = _context.Transactions.Where(t => t.type.ToString() == "-").ToList();
+            int sale_cnt = 0;
+            var intSumofSales = 0;
+            var intSumofProf = 0;
+            foreach (var sells in sells24)
             {
-            
+                var myItem = _context.Items.Where(i => i.hash_name_key == sells.Game_hash_name_key).SingleOrDefault();
+                myItem.LastNumberSold = 0;
+            }
+
+
+                foreach (var sells in sells24)
+            {
+
+                //REMEMBER: SOME ITEMS MIGHT HAVE MULTIPLE SALES SO THE NUMBER OF CARDS
+                //RETURNED MIGHT NOT MATCH COUNTS
+
+
                 //find likely buy
-                var buys = _context.Transactions.Where(t => t.DateT < DateTime.Now.AddDays(-7) && t.type.ToString() == "+" && t.Game_hash_name_key == sells.Game_hash_name_key).OrderByDescending(o=> o.DateT).ToList();
-                if (buys.Count() < 1) 
+                var buys = _context.Transactions.Where(t => t.DateT < DateTime.Now.AddDays(-7) && t.type.ToString() == "+" && t.Game_hash_name_key == sells.Game_hash_name_key).OrderByDescending(o => o.DateT).ToList();
+                if (buys.Count() < 1)
                 {
 
                     //ERROR!!!!
@@ -165,29 +181,31 @@ namespace SteamBoat.Controllers
                 }
 
                 var myItem = _context.Items.Where(i => i.hash_name_key == sells.Game_hash_name_key).SingleOrDefault();
+                if (myItem.hash_name_key.Contains("1449850")) 
+                { 
+                
+                }
                 myItem.LastSellDate = sells.DateT;
-                myItem.LastSellInt = buys[0].int_sale_price_after_fees;
+                myItem.LastSellInt = sells.int_sale_price_after_fees;
                 myItem.LastProfitInt = sells.int_sale_price_after_fees - buys[0].int_sale_price_after_fees;
+                myItem.LastNumberSold = myItem.LastNumberSold + 1;
+                Console.WriteLine("Item: " + sale_cnt.ToString());
+
+                intSumofSales = intSumofSales + myItem.LastSellInt;
+                intSumofProf = intSumofProf + myItem.LastProfitInt;
+                sale_cnt++;
                 _context.SaveChanges();
-                Console.WriteLine(buys.Count());
+               // Console.WriteLine(buys.Count());
             }
 
 
             var myItems = _context.Items.Where(l => l.LastSellDate == DateTime.Today).ToList();
 
-            ViewBag.NumberofSales = myItems.Count();
+            ViewBag.NumberofSales = sale_cnt;
 
-            var intSumofSales = 0;
-            var intSumofProf = 0;
+           
 
-            foreach (var i in myItems) 
-            {
-
-                intSumofSales = intSumofSales + i.LastSellInt;
-                intSumofProf = intSumofProf + i.LastProfitInt;
-
-
-            }
+         
             decimal dec = Convert.ToDecimal(intSumofProf);
             dec = dec / 100;
             ViewBag.SumofProfStr = "£" + dec.ToString();
@@ -198,20 +216,23 @@ namespace SteamBoat.Controllers
 
             decimal dec2 = Convert.ToDecimal(AveProfit);
             dec2 = dec2 / 100;
-            ViewBag.AveProfitStr = "£" + dec2.ToString();
+
+
+            ViewBag.AveProfitStr = "£" + String.Format("{0:0.00}", dec2);
+
             ViewBag.AveProfitInt = AveProfit;
 
 
 
             return View(myItems);
-            
+
         }
 
 
         public IActionResult AutoSell()
         {
-            
-            
+
+
 
 
             var allItems = _context.Items.ToList();
@@ -232,30 +253,30 @@ namespace SteamBoat.Controllers
 
 
 
-                Console.WriteLine(myItem.Name + "\t Sell : " + currentbids[0].bid_int + "(" + currentbids[0].bid_quant +  ")," + currentbids[1].bid_int + "(" + currentbids[1].bid_quant + ")," + currentbids[2].bid_int + "(" + currentbids[2].bid_quant + ")," + currentbids[3].bid_int + "(" + currentbids[3].bid_quant + ")," + currentbids[4].bid_int + "(" + currentbids[4].bid_quant + ")," + "\t : Fruits = \t" + currentbids[0].bid_fruit + "," + currentbids[1].bid_fruit);
+                Console.WriteLine(myItem.Name + "\t Sell : " + currentbids[0].bid_int + "(" + currentbids[0].bid_quant + ")," + currentbids[1].bid_int + "(" + currentbids[1].bid_quant + ")," + currentbids[2].bid_int + "(" + currentbids[2].bid_quant + ")," + currentbids[3].bid_int + "(" + currentbids[3].bid_quant + ")," + currentbids[4].bid_int + "(" + currentbids[4].bid_quant + ")," + "\t : Fruits = \t" + currentbids[0].bid_fruit + "," + currentbids[1].bid_fruit);
 
 
                 //remove my sales
                 var mySales = _context.ItemsForSale.Where(w => w.Game_hash_name_key == myItem.hash_name_key).OrderBy(o => o.sale_price).ToList();
 
-                if (mySales.Count > 1) 
+                if (mySales.Count > 1)
                 {
-                    foreach (var mySale in mySales) 
+                    foreach (var mySale in mySales)
                     {
 
                         var myMatch = currentbids.Where(b => b.bid_int == mySale.sale_price).SingleOrDefault();
-                        if (myMatch != null) 
+                        if (myMatch != null)
                         {
                             Console.WriteLine("Found a Sell(s) thats mine, removing ...");
                             myMatch.bid_quant = myMatch.bid_quant - 1;
                             Console.WriteLine(myItem.Name + "\t Sell : " + currentbids[0].bid_int + "(" + currentbids[0].bid_quant + ")," + currentbids[1].bid_int + "(" + currentbids[1].bid_quant + ")," + currentbids[2].bid_int + "(" + currentbids[2].bid_quant + ")," + currentbids[3].bid_int + "(" + currentbids[3].bid_quant + ")," + currentbids[4].bid_int + "(" + currentbids[4].bid_quant + ")," + "\t : Fruits = \t" + currentbids[0].bid_fruit + "," + currentbids[1].bid_fruit);
 
                         }
-                        
 
-                    
+
+
                     }
-                
+
                 }
 
                 //Decide the price
@@ -284,17 +305,17 @@ namespace SteamBoat.Controllers
                         }
 
                     }
-                    else 
-                    { 
-                    //failed fruiti!
+                    else
+                    {
+                        //failed fruiti!
                     }
 
                     cnt++;
-                    if (cnt == 5) 
+                    if (cnt == 5)
                     {
-                    //EEK no price!
+                        //EEK no price!
 
-                    
+
                     }
 
                 } while (myPrice == 0);
@@ -311,7 +332,7 @@ namespace SteamBoat.Controllers
         }
 
 
-                public IActionResult AutoBid()
+        public IActionResult AutoBid()
         {
             var allItems = _context.Items.ToList();
             foreach (var myItem in allItems)
@@ -321,26 +342,26 @@ namespace SteamBoat.Controllers
                 myItem.IdealBidStr = "";
                 myItem.CancelCurrentBid = false;
 
-                if (myItem.Name == "Top Hat") 
-                    
+                if (myItem.Name == "Top Hat")
+
                 {
-                
+
                 }
 
                 //set ideal bid
-                if (ActivityGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0) 
+                if (ActivityGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0)
                 {
                     if (PriceGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0)
                     {
-                        if (myItem.IncludeInAutoBid) 
+                        if (myItem.IncludeInAutoBid)
                         {
                             myItem.IdealBid_Notes += " FLAGGED TO INCLUDE | ";
                         }
-                        if (myItem.bid_price > 0) 
+                        if (myItem.bid_price > 0)
                         {
                             myItem.IdealBid_Notes += " EXISTING BID | ";
                         }
-                     
+
                         //CAlculate the GAP
                         if (myItem.bid_price == myItem.bid1Price)
                         {
@@ -379,7 +400,7 @@ namespace SteamBoat.Controllers
                                         myItem.IdealBid_Notes += " REDUCING IDEAL BID | ";
                                         myItem.IdealBidInt = myItem.bid2Price + 1;
                                     }
-                                    else 
+                                    else
                                     {
                                         //keep top bid
                                         myItem.IdealBid_Notes += " HOLD | ";
@@ -396,7 +417,7 @@ namespace SteamBoat.Controllers
                                         myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
                                         myItem.IdealBidInt++;
                                     }
-                                    else 
+                                    else
                                     {
                                         myItem.IdealBid_Notes += " HOLD | ";
                                         myItem.IdealBidInt = 0;
@@ -453,7 +474,7 @@ namespace SteamBoat.Controllers
 
 
                     }
-                    else 
+                    else
                     {
                         //Price out of bounds
                         if (myItem.bid_price > 0)
@@ -468,9 +489,9 @@ namespace SteamBoat.Controllers
 
                 }
                 //FINAL CHECKS
-                if (myItem.IdealBidInt > 0) 
+                if (myItem.IdealBidInt > 0)
                 {
-                    if (myItem.IdealBidInt > 800 || myItem.IdealBidInt < 10) 
+                    if (myItem.IdealBidInt > 800 || myItem.IdealBidInt < 10)
                     {
                         myItem.IdealBid_Notes += " ** ERROR ** NUMBER OOB | " + myItem.IdealBidInt.ToString();
                         myItem.IdealBidInt = 0;
@@ -488,7 +509,7 @@ namespace SteamBoat.Controllers
 
 
                     //has bid remnanined the same?
-                    if (myItem.IdealBidInt == myItem.bid_price) 
+                    if (myItem.IdealBidInt == myItem.bid_price)
                     {
                         myItem.IdealBid_Notes += " BID PRICE IS SAME AS START | ";
                         myItem.IdealBidInt = 0;
@@ -499,13 +520,13 @@ namespace SteamBoat.Controllers
                     //get rid of excludes
                     foreach (var excl in _context.exclude.ToList())
                     {
-                        if (myItem.Game == excl.Game) 
+                        if (myItem.Game == excl.Game)
                         {
                             myItem.IdealBid_Notes += " EXCLUDED GAME REMOVED | ";
                             myItem.IdealBidInt = 0;
                             myItem.IdealBidStr = "";
 
-                        } 
+                        }
 
 
                     }
@@ -525,7 +546,7 @@ namespace SteamBoat.Controllers
 
 
             }
-            
+
 
 
 
@@ -554,11 +575,11 @@ namespace SteamBoat.Controllers
             return View(allItems2);
         }
 
-      
+
 
         bool GapGood(int myGap, Item myItem)
         {
-            // 30 - 40
+            // 30 - 50
             if (myItem.StartingPrice <= 50)
             {
                 if (myGap >= 24)
@@ -573,7 +594,7 @@ namespace SteamBoat.Controllers
 
                 }
             }
-            // 41 - 75
+            // 51 - 75
             if (myItem.StartingPrice <= 75)
             {
                 if (myGap >= 23)
@@ -588,20 +609,35 @@ namespace SteamBoat.Controllers
 
                 }
             }
-
-            // 76 +
-            if (myGap >= 22)
+            // 76 - 250
+            if (myItem.StartingPrice <= 250)
+            {
+                if (myGap >= 22)
                 {
                     return true;
 
                 }
                 else
                 {
+                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
+                    return false;
+
+                }
+            }
+
+            // 250 +
+            if (myGap >= 20)
+            {
+                return true;
+
+            }
+            else
+            {
                 myItem.IdealBid_Notes += " GAP TOO SMALL | ";
                 return false;
 
-                }
-            
+            }
+
 
 
         }
@@ -612,7 +648,7 @@ namespace SteamBoat.Controllers
             {
                 return true;
             }
-            else 
+            else
             {
                 myItem.IdealBid_Notes += " OUT OF PRICE RANGE | ";
                 return false;
@@ -621,13 +657,13 @@ namespace SteamBoat.Controllers
 
 
 
-        bool WallGood(Item myItem, int quant) 
+        bool WallGood(Item myItem, int quant)
         {
 
-            if (quant == 1 && myItem.Activity > 29) 
+            if (quant == 1 && myItem.Activity > 29)
             {
                 return true;
-            
+
             }
             if (quant == 2 && myItem.Activity > 60)
             {
@@ -665,7 +701,7 @@ namespace SteamBoat.Controllers
                 return true;
             }
 
-            if (sellfruit < 10) 
+            if (sellfruit < 10)
             {
 
                 return true;
@@ -676,8 +712,8 @@ namespace SteamBoat.Controllers
         }
 
 
-             
-            bool ActivityGood(Item myItem) 
+
+        bool ActivityGood(Item myItem)
         {
             if (myItem.StartingPrice < 50)
             {
@@ -686,19 +722,19 @@ namespace SteamBoat.Controllers
                 if (myItem.Activity >= 20)
                 {
                     //active enough
-                    
+
                     return true;
                 }
-                else 
+                else
                 {
                     //NOT active enough
                     myItem.IdealBid_Notes += " NOT ACTIVE ENOUGH | ";
                     return false;
-                
+
                 }
 
             }
-            else 
+            else
             {
                 //Higher price allowed less activity
                 if (myItem.Activity >= 10)
@@ -716,14 +752,14 @@ namespace SteamBoat.Controllers
 
             }
 
-            
+
         }
 
 
-         
 
 
-                public IActionResult ReadBuyOrders() 
+
+        public IActionResult ReadBuyOrders()
         {
             _SteamBoatService.ClearAllBids();
 
@@ -744,7 +780,7 @@ namespace SteamBoat.Controllers
             {
                 foreach (var buyorder in buyorders)
                 {
-                    
+
                     //var x = buyorder.Descendants("a").ToList();
                     var market_listing_item_name = buyorder.Descendants("a").Where(c => c.GetAttributeValue("class", "") == "market_listing_item_name_link").SingleOrDefault();
                     var Name = market_listing_item_name.InnerText;
@@ -759,13 +795,13 @@ namespace SteamBoat.Controllers
                     var imageURL = imageURLFULL.GetAttributeValue("src", "");
                     imageURL = imageURL.Replace("/38fx38f", "").Replace("https://community.cloudflare.steamstatic.com/economy/image/", "");
                     imageURL = imageURL.Replace("https://community.akamai.steamstatic.com/economy/image/", "");
-                    if (imageURL.Contains("https:")) 
+                    if (imageURL.Contains("https:"))
                     {
                         Console.WriteLine("ERROR : This should just be image code, no http : " + imageURL);
                     }
                     missionReportVM unused = new missionReportVM();
-                    if (bid_price == 37) 
-                    { 
+                    if (bid_price == 37)
+                    {
                     }
                     var addResult = _SteamBoatService.CreateUpdateItemPage(hash_name, Link, unused, 0, imageURL, Link);
                     var myitem = _SteamBoatService.UpdateBidPrice(hash_name, bid_quant, bid_price, bid_price_in_pound);
@@ -775,7 +811,7 @@ namespace SteamBoat.Controllers
             }
 
 
-            
+
             var items = _SteamBoatService.GetAllItems();
             var bids = items.Where(b => b.bid_price != 0).ToList();
             return View("/views/home/items.cshtml", bids);
@@ -785,14 +821,14 @@ namespace SteamBoat.Controllers
         }
 
 
-        public IActionResult ReadSellOrders() 
+        public IActionResult ReadSellOrders()
         {
             _SteamBoatService.ClearAllSales();
             var fileloc = Path.Combine(Directory.GetCurrentDirectory(), "downloads//Selling", "download.json");
-            
+
 
             string myHistory = System.IO.File.ReadAllText(fileloc);
-           
+
 
             var myJSOObject = JObject.Parse(myHistory);
             var arrayofitems = myJSOObject.SelectToken("results_html");
@@ -857,9 +893,9 @@ namespace SteamBoat.Controllers
 
             return Content("OK");
 
-            }
+        }
 
-        public IActionResult UpdateActivity() 
+        public IActionResult UpdateActivity()
         {
 
             _SteamBoatService.ActivityUpdateAll(true);
@@ -966,7 +1002,7 @@ namespace SteamBoat.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult LinksFromResults(missionReportVM res) 
+        public IActionResult LinksFromResults(missionReportVM res)
         {
 
 
@@ -974,7 +1010,7 @@ namespace SteamBoat.Controllers
             return View();
         }
 
-        public IActionResult Items() 
+        public IActionResult Items()
         {
 
             var items = _SteamBoatService.GetAllItems();
@@ -985,7 +1021,7 @@ namespace SteamBoat.Controllers
         {
 
             return Content(_SteamBoatService.Excluder());
-            
+
         }
 
 
@@ -1003,12 +1039,12 @@ namespace SteamBoat.Controllers
         public IActionResult CheckSalePrices()
         {
 
-            
-           var result = _SteamBoatService.CheckSalePrices();
+
+            var result = _SteamBoatService.CheckSalePrices();
             var sale_items = _SteamBoatService.GetAllItemsandSales();
             return View(sale_items);
 
-           
+
 
 
         }
@@ -1022,16 +1058,16 @@ namespace SteamBoat.Controllers
 
             var myJSOObject = JObject.Parse(myHistory);
             var arrayofitems = myJSOObject.SelectToken("results_html");
-            
-            
-            
+
+
+
             //json
-           //var assets = myJSOObject.SelectToken("assets");
+            //var assets = myJSOObject.SelectToken("assets");
 
             foreach (var assetgroup in myJSOObject)
             {
-                
-                if (assetgroup.Key == "assets") 
+
+                if (assetgroup.Key == "assets")
                 {
                     foreach (var assets in assetgroup.Value)
                     {
@@ -1041,7 +1077,7 @@ namespace SteamBoat.Controllers
                             {
                                 foreach (var games in itemcount)
                                 {
-                                    foreach (var game in games) 
+                                    foreach (var game in games)
                                     {
 
                                         foreach (var props in game)
@@ -1049,13 +1085,13 @@ namespace SteamBoat.Controllers
 
                                             var assettype = assets.GetType();
 
-                                           
+
                                             var myasset = (JProperty)assets;
                                             var myassetName = myasset.Name;
 
 
 
-                                            
+
 
                                             var game_hash = props.SelectToken("market_hash_name").ToString();
                                             var icon = props.SelectToken("icon_url").ToString();
@@ -1082,7 +1118,7 @@ namespace SteamBoat.Controllers
 
                                         }
 
-                                }
+                                    }
 
                                 }
                             }
@@ -1111,7 +1147,7 @@ namespace SteamBoat.Controllers
 
             var transactions = htmlDoc.DocumentNode.SelectNodes("//div[contains(@id, 'history_row_')]");
 
-            
+
             foreach (var transaction in transactions)
             {
 
@@ -1157,7 +1193,7 @@ namespace SteamBoat.Controllers
 
 
 
-                   
+
 
 
 
@@ -1169,11 +1205,11 @@ namespace SteamBoat.Controllers
 
                     mydate = _SteamBoatService.Clean(mydate);
                     DateTime myparseddate = DateTime.Parse(mydate);
-                  
+
                     var hash = _SteamBoatService.GetGameHashNamefromItemandGame(Item.ToString(), Game.ToString());
-                    
+
                     //missionReportVM unused = new missionReportVM();
-                   // var addResult = _SteamBoatService.CreateUpdateItemPage(hash, Link, unused, 0, imageURL, Link);
+                    // var addResult = _SteamBoatService.CreateUpdateItemPage(hash, Link, unused, 0, imageURL, Link);
 
 
 
@@ -1199,7 +1235,7 @@ namespace SteamBoat.Controllers
                         _context.Transactions.Add(Mytrans);
                         _context.SaveChanges();
                     }
-                } else 
+                } else
                 {
                     Console.WriteLine(id + " already logged or is not a buy or sell");
                 }
@@ -1228,7 +1264,13 @@ namespace SteamBoat.Controllers
 
         }
 
+        public IActionResult UpdateTrans() {
+            
+            
+            _SteamBoatService.UpdateTrans();
+            return RedirectToAction("Hour24");
 
+    }
         private string Last_in_array(string myString, string separator) 
         {
 

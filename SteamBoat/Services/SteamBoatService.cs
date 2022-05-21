@@ -1029,7 +1029,9 @@ namespace SteamBoat.Services
 
             foreach (var item in items) 
             {
-
+                if (item.hash_name_key == "Under the Bridge") 
+                { 
+                }
                 var sale_count = item.Transactions.Where(t => t.type.ToString() == "-").Count();
                 var buy_count = item.Transactions.Where(t => t.type.ToString() == "+").Count();
 
@@ -1303,145 +1305,156 @@ namespace SteamBoat.Services
                                 Console.Write("ITEM: " + cnt.ToString());
                                 if (singleItem.Displayed == true)
                                 {
-
-                                    RandomWait(1, 5);
-                                    singleItem.Click();
-                                    RandomWait(5, 15);
-
-                                    var myLink = driver.FindElement(By.LinkText("View in Community Market"));
-                                    var url = myLink.GetAttribute("href");
-                                    string[] split = url.Split("/");
-                                    var hash = HttpUtility.UrlDecode(split[split.Length - 1]);
-
-                                    var sellbuttons = driver.FindElements(By.ClassName("item_market_action_button_green"));
-                                    RandomWait(10, 20);
-                                    Console.WriteLine(sellbuttons.Count().ToString() + " Sell buttons");
-                                    foreach (var butt in sellbuttons)
+                                    var myClass = singleItem.GetAttribute("class");
+                                    if (!myClass.Contains("disabled"))
                                     {
-                                        if (butt.Displayed == true)
+                                        RandomWait(1, 5);
+                                        singleItem.Click();
+                                        RandomWait(5, 15);
+
+                                        var myLink = driver.FindElement(By.LinkText("View in Community Market"));
+                                        var url = myLink.GetAttribute("href");
+                                        string[] split = url.Split("/");
+                                        var hash = HttpUtility.UrlDecode(split[split.Length - 1]);
+
+                                        var sellbuttons = driver.FindElements(By.ClassName("item_market_action_button_green"));
+                                        RandomWait(10, 20);
+                                        Console.WriteLine(sellbuttons.Count().ToString() + " Sell buttons");
+                                        foreach (var butt in sellbuttons)
                                         {
-                                            butt.Click();
+                                            if (butt.Displayed == true)
+                                            {
+                                                butt.Click();
+                                            }
+
+
                                         }
 
+                                        RandomWait(10, 20);
+                                        var price_box = driver.FindElement(By.Id("market_sell_buyercurrency_input"));
+                                        RandomWait(3, 10);
+                                        price_box.SendKeys(Keys.Backspace);
+                                        RandomWait(1, 6);
+                                        //use 900 so zero is never used in error
+                                        var myprice = "9.0";
+                                        var myItem = _context.Items.Where(h => h.hash_name_key == hash).SingleOrDefault();
 
-                                    }
-
-                                    RandomWait(10, 20);
-                                    var price_box = driver.FindElement(By.Id("market_sell_buyercurrency_input"));
-                                    RandomWait(3, 10);
-                                    price_box.SendKeys(Keys.Backspace);
-                                    RandomWait(1, 6);
-                                    //use 900 so zero is never used in error
-                                    var myprice = "9.0";
-                                    var myItem = _context.Items.Where(h => h.hash_name_key == hash).SingleOrDefault();
-
-                                    if (myItem == null)
-                                    {
-                                        throw new Exception("CaNT FIND ITEM  : " + hash);
-                                    }
-
-                                    //We have an item
-                                    myprice = myItem.IdealSellStr;
-
-                                    if (myItem.IdealSellInt != 100 && myItem.IdealSellInt != 200 && myItem.IdealSellInt != 300 && myItem.IdealSellInt != 400 && myItem.IdealSellInt != 500 && myItem.IdealSellInt != 600 && myItem.IdealSellInt != 700 && myItem.IdealSellInt != 800)
-                                    {
-                                        if (myItem.IdealSellInt > 800 || myItem.IdealSellStr.Substring(1, 1) != ".")
+                                        if (myItem == null)
                                         {
-
-                                            //somethings not right
-                                            throw new Exception("SELL amount looks wrong!");
+                                            throw new Exception("CaNT FIND ITEM  : " + hash);
                                         }
-                                    }
-                                    RandomWait(8, 16);
-                                    myprice = myItem.IdealSellStr;
-                                    RandomWait(11, 23);
-                                    price_box.SendKeys(myprice);
-                                    var terms = driver.FindElement(By.Id("market_sell_dialog_accept_ssa"));
-                                    RandomWait(5, 20);
-                                    if (terms.Selected == false)
-                                    {
-                                        terms.Click();
-                                    }
-                                    RandomWait(10, 20);
+
+                                        //We have an item
+                                        myprice = myItem.IdealSellStr;
+
+                                        if (myItem.IdealSellInt != 100 && myItem.IdealSellInt != 200 && myItem.IdealSellInt != 300 && myItem.IdealSellInt != 400 && myItem.IdealSellInt != 500 && myItem.IdealSellInt != 600 && myItem.IdealSellInt != 700 && myItem.IdealSellInt != 800)
+                                        {
+                                            if (myItem.IdealSellInt > 800 || myItem.IdealSellStr.Substring(1, 1) != ".")
+                                            {
+
+                                                //somethings not right
+                                                throw new Exception("SELL amount looks wrong!");
+                                            }
+                                        }
+                                        RandomWait(8, 16);
+                                        myprice = myItem.IdealSellStr;
+                                        RandomWait(11, 23);
+                                        price_box.SendKeys(myprice);
+                                        var terms = driver.FindElement(By.Id("market_sell_dialog_accept_ssa"));
+                                        RandomWait(5, 20);
+                                        if (terms.Selected == false)
+                                        {
+                                            terms.Click();
+                                        }
+                                        RandomWait(10, 20);
 
 
 
 
-                                    var placeorder = driver.FindElements(By.Id("market_sell_dialog_accept"));
-                                    RandomWait(5, 10);
-                                    placeorder[placeorder.Count - 1].Click();
-                                    RandomWait(40, 80);
-
-                                    try
-                                    {
-                                        //try twice
-                                        var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
+                                        var placeorder = driver.FindElements(By.Id("market_sell_dialog_accept"));
                                         RandomWait(5, 10);
-                                        placeorderConfirm.Click();
-                                        RandomWait(10, 15);
-                                    }
-                                    catch 
-                                    {
-                                        Console.WriteLine("SECOND GO AT SELL BUTTON!");
-                                        var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
-                                        RandomWait(25, 40);
-                                        placeorderConfirm.Click();
-                                        RandomWait(30, 50);
+                                        placeorder[placeorder.Count - 1].Click();
+                                        RandomWait(40, 80);
 
-                                    }
-
-                                    try
-                                    {
-                                        Console.WriteLine("FIRST GO AT OK BUTTON!");
-                                        RandomWait(80, 90);
-                                        var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
-                                        OK.Click();
-
-                                        RandomWait(55, 79);
-                                    }
-                                    catch
-                                    {
                                         try
                                         {
-                                            Console.WriteLine("SECOND GO AT OK BUTTON!");
-                                            RandomWait(55, 79);
+                                            //try twice
+                                            var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
+                                            RandomWait(5, 10);
+                                            placeorderConfirm.Click();
+                                            RandomWait(10, 15);
+                                        }
+                                        catch
+                                        {
+                                            Console.WriteLine("SECOND GO AT SELL BUTTON!");
+                                            var placeorderConfirm = driver.FindElement(By.Id("market_sell_dialog_ok"));
+                                            RandomWait(25, 40);
+                                            placeorderConfirm.Click();
+                                            RandomWait(30, 50);
+
+                                        }
+
+                                        try
+                                        {
+                                            Console.WriteLine("FIRST GO AT OK BUTTON!");
+                                            RandomWait(80, 90);
                                             var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
-                                            RandomWait(15, 22);
                                             OK.Click();
 
-                                            RandomWait(15, 39);
+                                            RandomWait(55, 79);
                                         }
-                                        catch 
+                                        catch
                                         {
                                             try
                                             {
-                                                Console.WriteLine("THIRD GO AT OK BUTTON!");
-                                                RandomWait(90, 95);
-                                                RandomWait(90, 95);
+                                                Console.WriteLine("SECOND GO AT OK BUTTON!");
+                                                RandomWait(55, 79);
                                                 var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
-                                                RandomWait(55, 77);
+                                                RandomWait(15, 22);
                                                 OK.Click();
 
                                                 RandomWait(15, 39);
                                             }
-                                            catch {
-                                                Console.WriteLine("FOURTH GO AT OK BUTTON!");
-                                                RandomWait(90, 95);
-                                                RandomWait(90, 95);
-                                                var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
-                                                RandomWait(55, 77);
-                                                OK.Click();
+                                            catch
+                                            {
+                                                try
+                                                {
+                                                    Console.WriteLine("THIRD GO AT OK BUTTON!");
+                                                    RandomWait(90, 95);
+                                                    RandomWait(90, 95);
+                                                    var OK = driver.FindElement(By.ClassName("btn_grey_steamui"));
+                                                    RandomWait(55, 77);
+                                                    OK.Click();
 
-                                                RandomWait(15, 39);
+                                                    RandomWait(15, 39);
+                                                }
+                                                catch
+                                                {
 
+                                                    Console.WriteLine("NO DICE!");
+                                                }
                                             }
                                         }
+
+                                        //new bit to clse any erros
+                                        try
+                                        {
+                                            RandomWait(2, 5);
+                                            var cross = driver.FindElement(By.ClassName("newmodal_close"));
+                                            cross.Click();
+                                            Console.WriteLine("CLICKED THE CROSS");
+
+                                        }
+                                        catch { }
+
+
+                                        cnt++;
+
                                     }
-
-
- cnt++;
-
-
+                                    else 
+                                    {
+                                        Console.WriteLine("Item Disabled");
+                                    }
 
                                 }
                             }

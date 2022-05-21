@@ -138,6 +138,8 @@ namespace SteamBoat.Models
         public int LastSellInt { get; set; }
 
         public int LastProfitInt { get; set; }
+        
+        public int LastNumberSold { get; set; }
 
 
         [ForeignKey("Game_hash_name_key")]
