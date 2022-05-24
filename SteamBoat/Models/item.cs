@@ -141,6 +141,9 @@ namespace SteamBoat.Models
         
         public int LastNumberSold { get; set; }
 
+        public bool tempBuyHold { get; set; }
+        public bool tempSellHold { get; set; }
+
 
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }
@@ -199,6 +202,7 @@ namespace SteamBoat.Models
         [Key]
         [MaxLength(255)]
         public string Game { get; set; }
+
 
     }
 

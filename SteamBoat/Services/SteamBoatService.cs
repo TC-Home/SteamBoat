@@ -336,6 +336,9 @@ namespace SteamBoat.Services
         {
         
             var myItems = _context.Items.Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
+            int tot = myItems.Count();
+            int cnt = 0;
+
             foreach (var myItem in myItems.ToList()) 
             {
                 if (myItem.ItemsForSale.Count > 0) 
@@ -343,12 +346,9 @@ namespace SteamBoat.Services
                 
                 };
                 UpdateStatsforItem(myItem, freshness);
-
+                cnt++;
+                Console.WriteLine(cnt.ToString() + "/" + tot.ToString());
                 _context.SaveChanges();
-
-
-
-
             }
             return "OK";
         }
@@ -1175,11 +1175,14 @@ namespace SteamBoat.Services
             var gamestoexclude = _context.exclude.ToList();
             foreach (var excludeme in gamestoexclude) 
             {
-                var matches = _context.Items.Where(g => g.Game == excludeme.Game).ToList();
+                var matches = _context.Items.Where(g => g.Game == excludeme.Game).Include(i => i.ItemsForSale).Include(t => t.Transactions).ToList();
                 foreach (var delme in matches) 
                 {
                     cnt++;
-                    _context.Items.Remove(delme);
+                    if (delme.Transactions.Count() == 0 && delme.ItemsForSale.Count() == 0)
+                    {
+                        _context.Items.Remove(delme);
+                    }
 
                 }
             

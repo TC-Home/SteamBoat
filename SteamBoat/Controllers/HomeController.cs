@@ -348,202 +348,218 @@ namespace SteamBoat.Controllers
 
                 }
 
-                //set ideal bid
-                if (ActivityGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0)
+                if (myItem.tempBuyHold == false)
                 {
-                    if (PriceGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0)
+
+                    //set ideal bid
+                    if (ActivityGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0)
                     {
-                        if (myItem.IncludeInAutoBid)
+                        if (PriceGood(myItem) || myItem.IncludeInAutoBid == true || myItem.bid_price > 0)
                         {
-                            myItem.IdealBid_Notes += " FLAGGED TO INCLUDE | ";
-                        }
-                        if (myItem.bid_price > 0)
-                        {
-                            myItem.IdealBid_Notes += " EXISTING BID | ";
-                        }
+                            if (myItem.IncludeInAutoBid)
+                            {
+                                myItem.IdealBid_Notes += " FLAGGED TO INCLUDE | ";
+                            }
+                            if (myItem.bid_price > 0)
+                            {
+                                myItem.IdealBid_Notes += " EXISTING BID | ";
+                            }
 
-                        //CAlculate the GAP
-                        if (myItem.bid_price == myItem.bid1Price)
-                        {
-                            //I already have top bid
-                            myItem.IdealBidInt = myItem.bid1Price;
-                        }
-                        else
-                        {
-                            //Calculate likely bid to work out GAP
-                            myItem.IdealBidInt = myItem.bid1Price + 1;
-                        }
-
-
-                        var myGap = ((double)myItem.StartingPrice - (double)myItem.IdealBidInt) / (double)myItem.StartingPrice * 100;
-                        //is this gap OK
-                        //Console.WriteLine("Gap = " + ((int)myGap).ToString() + " | " + GapGood((int)myGap, myItem).ToString());
-                        if (GapGood((int)myGap, myItem))
-                        {
-
-                            //Gap is good
-                            //Set ideal bid
-
-                            //Do we already have top bid?
+                            //CAlculate the GAP
                             if (myItem.bid_price == myItem.bid1Price)
                             {
+                                //I already have top bid
+                                myItem.IdealBidInt = myItem.bid1Price;
+                            }
+                            else
+                            {
+                                //Calculate likely bid to work out GAP
+                                myItem.IdealBidInt = myItem.bid1Price + 1;
+                            }
 
-                                //we have top bid
-                                //If we are the only one bidding this price
-                                //check we cant reduce it
-                                if (myItem.bid1Quant == 1)
+
+                            var myGap = ((double)myItem.StartingPrice - (double)myItem.IdealBidInt) / (double)myItem.StartingPrice * 100;
+                            //is this gap OK
+                            //Console.WriteLine("Gap = " + ((int)myGap).ToString() + " | " + GapGood((int)myGap, myItem).ToString());
+                            if (GapGood((int)myGap, myItem))
+                            {
+
+                                //Gap is good
+                                //Set ideal bid
+
+                                //Do we already have top bid?
+                                if (myItem.bid_price == myItem.bid1Price)
                                 {
-                                    myItem.IdealBid_Notes += " WE HAVE SOLO TOP BID | ";
-                                    if (myItem.bid_price > myItem.bid2Price + 1)
+
+                                    //we have top bid
+                                    //If we are the only one bidding this price
+                                    //check we cant reduce it
+                                    if (myItem.bid1Quant == 1)
                                     {
-                                        //room to reduce our top bid
-                                        myItem.IdealBid_Notes += " REDUCING IDEAL BID | ";
-                                        myItem.IdealBidInt = myItem.bid2Price + 1;
+                                        myItem.IdealBid_Notes += " WE HAVE SOLO TOP BID | ";
+                                        if (myItem.bid_price > myItem.bid2Price + 1)
+                                        {
+                                            //room to reduce our top bid
+                                            myItem.IdealBid_Notes += " REDUCING IDEAL BID | ";
+                                            myItem.IdealBidInt = myItem.bid2Price + 1;
+                                        }
+                                        else
+                                        {
+                                            //keep top bid
+                                            myItem.IdealBid_Notes += " HOLD | ";
+                                            myItem.IdealBidInt = 0;
+                                            myItem.IdealBidStr = "";
+                                        }
+
                                     }
                                     else
                                     {
-                                        //keep top bid
-                                        myItem.IdealBid_Notes += " HOLD | ";
-                                        myItem.IdealBidInt = 0;
-                                        myItem.IdealBidStr = "";
+                                        myItem.IdealBid_Notes += " WE HAVE TOP BID WITH OTHERS | ";
+                                        if (myItem.bid1Quant > 3)
+                                        {
+                                            myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
+                                            myItem.IdealBidInt++;
+                                        }
+                                        else
+                                        {
+                                            myItem.IdealBid_Notes += " HOLD | ";
+                                            myItem.IdealBidInt = 0;
+                                            myItem.IdealBidStr = "";
+                                        }
+
                                     }
+
+
 
                                 }
                                 else
                                 {
-                                    myItem.IdealBid_Notes += " WE HAVE TOP BID WITH OTHERS | ";
-                                    if (myItem.bid1Quant > 3)
+
+                                    //DONT HAVE TOP BID
+
+                                    if (myItem.bid_price > 0)
                                     {
+                                        //ALREADY HAVE A BID
+                                        //BUT NOT TOP BID
+
                                         myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
-                                        myItem.IdealBidInt++;
+                                        myItem.IdealBidInt = myItem.bid1Price + 1;
                                     }
                                     else
                                     {
-                                        myItem.IdealBid_Notes += " HOLD | ";
-                                        myItem.IdealBidInt = 0;
-                                        myItem.IdealBidStr = "";
+                                        //DONT ALREADY HAVE A BID
+                                        //NEW BID
+                                        myItem.IdealBid_Notes += " NEW BID | ";
+                                        myItem.IdealBidInt = myItem.bid1Price + 1;
                                     }
-
                                 }
+
+
+
+
+
 
 
 
                             }
                             else
                             {
-
-                                //DONT HAVE TOP BID
-
+                                //GAp too Small
                                 if (myItem.bid_price > 0)
                                 {
-                                    //ALREADY HAVE A BID
-                                    //BUT NOT TOP BID
-
-                                    myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
-                                    myItem.IdealBidInt = myItem.bid1Price + 1;
+                                    myItem.IdealBid_Notes += " CANCEL CURRENT BID (GAP) | ";
+                                    myItem.CancelCurrentBid = true;
                                 }
-                                else
-                                {
-                                    //DONT ALREADY HAVE A BID
-                                    //NEW BID
-                                    myItem.IdealBid_Notes += " NEW BID | ";
-                                    myItem.IdealBidInt = myItem.bid1Price + 1;
-                                }
+                                myItem.IdealBidInt = 0;
+                                myItem.IdealBidStr = "";
                             }
-
-
-
-
-
 
 
 
                         }
                         else
                         {
-                            //GAp too Small
+                            //Price out of bounds
                             if (myItem.bid_price > 0)
                             {
-                                myItem.IdealBid_Notes += " CANCEL CURRENT BID (GAP) | ";
+                                myItem.IdealBid_Notes += " CANCEL CURRENT BID (PRICE OOB) | ";
                                 myItem.CancelCurrentBid = true;
                             }
                             myItem.IdealBidInt = 0;
                             myItem.IdealBidStr = "";
+
+                        }
+
+                    }
+                    //FINAL CHECKS
+                    if (myItem.IdealBidInt > 0)
+                    {
+                        if (myItem.IdealBidInt > 800 || myItem.IdealBidInt < 10)
+                        {
+                            myItem.IdealBid_Notes += " ** ERROR ** NUMBER OOB | " + myItem.IdealBidInt.ToString();
+                            myItem.IdealBidInt = 0;
+                            myItem.IdealBidStr = "";
                         }
 
 
-
-                    }
-                    else
-                    {
-                        //Price out of bounds
-                        if (myItem.bid_price > 0)
+                        var myGapFinal = ((double)myItem.StartingPrice - (double)myItem.IdealBidInt) / (double)myItem.StartingPrice * 100;
+                        if ((int)myGapFinal < 20)
                         {
-                            myItem.IdealBid_Notes += " CANCEL CURRENT BID (PRICE OOB) | ";
-                            myItem.CancelCurrentBid = true;
+                            myItem.IdealBid_Notes += " ** ERROR ** GAP < 20 | " + myGapFinal.ToString();
+                            myItem.IdealBidInt = 0;
+                            myItem.IdealBidStr = "";
                         }
-                        myItem.IdealBidInt = 0;
-                        myItem.IdealBidStr = "";
-
-                    }
-
-                }
-                //FINAL CHECKS
-                if (myItem.IdealBidInt > 0)
-                {
-                    if (myItem.IdealBidInt > 800 || myItem.IdealBidInt < 10)
-                    {
-                        myItem.IdealBid_Notes += " ** ERROR ** NUMBER OOB | " + myItem.IdealBidInt.ToString();
-                        myItem.IdealBidInt = 0;
-                        myItem.IdealBidStr = "";
-                    }
 
 
-                    var myGapFinal = ((double)myItem.StartingPrice - (double)myItem.IdealBidInt) / (double)myItem.StartingPrice * 100;
-                    if ((int)myGapFinal < 20)
-                    {
-                        myItem.IdealBid_Notes += " ** ERROR ** GAP < 20 | " + myGapFinal.ToString();
-                        myItem.IdealBidInt = 0;
-                        myItem.IdealBidStr = "";
-                    }
-
-
-                    //has bid remnanined the same?
-                    if (myItem.IdealBidInt == myItem.bid_price)
-                    {
-                        myItem.IdealBid_Notes += " BID PRICE IS SAME AS START | ";
-                        myItem.IdealBidInt = 0;
-                        myItem.IdealBidStr = "";
-
-                    }
-
-                    //get rid of excludes
-                    foreach (var excl in _context.exclude.ToList())
-                    {
-                        if (myItem.Game == excl.Game)
+                        //has bid remnanined the same?
+                        if (myItem.IdealBidInt == myItem.bid_price)
                         {
-                            myItem.IdealBid_Notes += " EXCLUDED GAME REMOVED | ";
+                            myItem.IdealBid_Notes += " BID PRICE IS SAME AS START | ";
                             myItem.IdealBidInt = 0;
                             myItem.IdealBidStr = "";
 
                         }
 
+                        //get rid of excludes
+                        foreach (var excl in _context.exclude.ToList())
+                        {
+                            if (myItem.Game == excl.Game)
+                            {
+                                myItem.IdealBid_Notes += " EXCLUDED GAME REMOVED | ";
+                                myItem.IdealBidInt = 0;
+                                myItem.IdealBidStr = "";
 
+                            }
+
+
+                        }
+
+
+
+
+
+
+
+
+                        //Still got a value after checks?
+                        if (myItem.IdealBidInt > 0)
+                        {
+                            //Got a bid make a str
+                            decimal dec = Convert.ToDecimal(myItem.IdealBidInt);
+                            dec = dec / 100;
+                            myItem.IdealBidStr = dec.ToString();
+                        }
                     }
-
-
-
-                    //Still got a value after checks?
-                    if (myItem.IdealBidInt > 0)
-                    {
-                        //Got a bid make a str
-                        decimal dec = Convert.ToDecimal(myItem.IdealBidInt);
-                        dec = dec / 100;
-                        myItem.IdealBidStr = dec.ToString();
-                    }
+                
+                
+            }
+            else
+                {
+                    myItem.IdealBid_Notes += " EXCLUDED ON BUY HOLD | ";
+                    myItem.IdealBidInt = 0;
+                    myItem.IdealBidStr = "";
 
                 }
-
 
             }
 
