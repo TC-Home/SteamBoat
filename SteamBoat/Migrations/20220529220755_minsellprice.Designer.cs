@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220529220755_minsellprice")]
+    partial class minsellprice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -143,9 +145,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("LastProfitInt")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LastSaleBuyPrice")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("LastSellDate")

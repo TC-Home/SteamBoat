@@ -12,7 +12,7 @@ namespace SteamBoat.Interfaces
     public interface ISteamBoatService
     {
         public missionReportVM doMission(int MissionId);
-        public missionReportVM doMission(int MissionId, Freshness Freshness);
+        public missionReportVM doMission(int MissionId, Freshness Freshness, bool flip_order = false);
 
         public missionReportVM GetItemsfromJSON(GrabResult GrabbedJSON, Mission Mission, missionReportVM MissionReport, Freshness Freshness);
 

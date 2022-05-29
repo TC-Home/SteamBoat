@@ -144,6 +144,16 @@ namespace SteamBoat.Models
         public bool tempBuyHold { get; set; }
         public bool tempSellHold { get; set; }
 
+        public int minSellPrice { get; set; }
+        
+        //likely buy price of last sale
+        public int LastSaleBuyPrice { get; set; }
+        
+        public bool onHoldPriceToolLow { get; set; }
+        public bool onHold { get; set; }
+        
+
+
 
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }

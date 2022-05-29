@@ -39,17 +39,17 @@ namespace SteamBoat.Controllers
             _context = context;
         }
 
-        public IActionResult Domission(int id = 1004, bool grab = true)
+        public IActionResult Domission(int id = 1004, bool grab = true, bool flip_order = false)
         {
 
             missionReportVM res = null;
 
             if (grab)
             {
-                res = _SteamBoatService.doMission(id, Freshness.Fresh);
+                res = _SteamBoatService.doMission(id, Freshness.Fresh,flip_order);
             } else
             {
-                res = _SteamBoatService.doMission(id, Freshness.AnyCached);
+                res = _SteamBoatService.doMission(id, Freshness.AnyCached, flip_order);
             }
             return View("/views/home/default.cshtml", res);
         }
@@ -71,15 +71,15 @@ namespace SteamBoat.Controllers
         public IActionResult x()
         {
 
-            for (int i = 10000; i < 43100; i = i + 100)
+            for (int i = 200; i < 3000; i = i + 500)
             {
                 Console.WriteLine(i);
                 var feed = new FeederUrl();
-                feed.MissionId = 1002;
+                feed.MissionId = 2005;
                 feed.isJSON = true;
-                feed.Url = "https://steamcommunity.com/market/search/render/?q=&start=" + i.ToString() + "&count=100&category_753_Game%5B%5D=any&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_cardborder%5B%5D=tag_cardborder_1&appid=753&sort_column=price&currency=2&norender=1";
-                //   _context.FeederUrl.Add(feed);
-                //   _context.SaveChanges();
+                feed.Url = "https://steamcommunity.com/market/search/render/?q=&start=" + i.ToString() + "&count=100&appid=252490&sort_column=price&currency=2&norender=1";
+                   _context.FeederUrl.Add(feed);
+                   _context.SaveChanges();
             }
 
 
@@ -114,6 +114,7 @@ namespace SteamBoat.Controllers
         public IActionResult Index()
         {
 
+          //  var x = increaseintbypercent(123, 10);
 
             //return RedirectToAction("Hour24");
             //   var allItems = _context.Items.ToList();
@@ -171,7 +172,7 @@ namespace SteamBoat.Controllers
 
 
                 //find likely buy
-                var buys = _context.Transactions.Where(t => t.DateT < DateTime.Now.AddDays(-7) && t.type.ToString() == "+" && t.Game_hash_name_key == sells.Game_hash_name_key).OrderByDescending(o => o.DateT).ToList();
+                var buys = _context.Transactions.Where(t => t.DateT < DateTime.Now.AddDays(-6) && t.type.ToString() == "+" && t.Game_hash_name_key == sells.Game_hash_name_key).OrderByDescending(o => o.DateT).ToList();
                 if (buys.Count() < 1)
                 {
 
@@ -232,10 +233,39 @@ namespace SteamBoat.Controllers
         public IActionResult AutoSell()
         {
 
+            //Calculate min sell price
+            var myItems = _context.Items.ToList();
+            {
+                foreach (var saleItem in myItems)
+                {
+                    var lastsale = _context.Transactions.Where(w => w.Game_hash_name_key == saleItem.hash_name_key && w.type.ToString() == "-").OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
+                    if (lastsale != null)
+                    {
+                        // var x = lastsale.DateT.AddDays(-6);
+                        // var y = _context.Transactions.Where(t => t.DateT <= lastsale.DateT.AddDays(-6) && t.type.ToString() == "+" && t.Game_hash_name_key == lastsale.Game_hash_name_key).OrderByDescending(o => o.DateT).ToList();
+                        saleItem.LastSellInt = lastsale.int_sale_price_after_fees;
+                        var likelybuy = _context.Transactions.Where(t => t.DateT <= lastsale.DateT.AddDays(-6) && t.type.ToString() == "+" && t.Game_hash_name_key == lastsale.Game_hash_name_key).OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
+                        saleItem.LastSellInt = lastsale.int_sale_price_after_fees;
+                        saleItem.LastSaleBuyPrice = likelybuy.int_sale_price_after_fees;
+                        Console.WriteLine(saleItem.hash_name_key + " buy = " + likelybuy.DateT.ToShortDateString() + " " + likelybuy.sale_price_after_fees.ToString() + " sale = " + lastsale.DateT.ToShortDateString() + " " + lastsale.sale_price_after_fees);
+                        int minSell = increaseintbypercent(likelybuy.int_sale_price_after_fees, 14);
+                        saleItem.minSellPrice = minSell;
+
+                    }
+                    else 
+                    {
+                        saleItem.minSellPrice = 0;
+                    }
+                }
+            }
+            _context.SaveChanges();
 
 
 
-            var allItems = _context.Items.ToList();
+
+
+
+                var allItems = _context.Items.ToList();
             foreach (var myItem in allItems)
             {
                 myItem.IdealSell_Notes = "";
@@ -319,12 +349,29 @@ namespace SteamBoat.Controllers
                     }
 
                 } while (myPrice == 0);
-                myItem.IdealSellInt = myPrice;
-                //Got a sell make a str
-                decimal dec = Convert.ToDecimal(myItem.IdealSellInt);
-                dec = dec / 100;
-                myItem.IdealSellStr = dec.ToString();
 
+
+                //check price is not lower than min price
+                if (myPrice < myItem.minSellPrice)
+                {
+                    //will sell at a loss
+                    //so dont sell dont sell at a loss
+                    myItem.onHoldPriceToolLow = true;
+                    Console.WriteLine("Price too low to sell : " + myItem.hash_name_key);
+                } else 
+                {
+                    //price good to sell
+                    myItem.onHoldPriceToolLow = false;
+                }
+
+                    
+                    myItem.IdealSellInt = myPrice;
+
+
+                    //Got a sell make a str
+                    decimal dec = Convert.ToDecimal(myItem.IdealSellInt);
+                    dec = dec / 100;
+                    myItem.IdealSellStr = dec.ToString();
 
             }
             _context.SaveChanges();
@@ -494,7 +541,7 @@ namespace SteamBoat.Controllers
                     //FINAL CHECKS
                     if (myItem.IdealBidInt > 0)
                     {
-                        if (myItem.IdealBidInt > 800 || myItem.IdealBidInt < 10)
+                        if (myItem.IdealBidInt > 900 || myItem.IdealBidInt < 10)
                         {
                             myItem.IdealBid_Notes += " ** ERROR ** NUMBER OOB | " + myItem.IdealBidInt.ToString();
                             myItem.IdealBidInt = 0;
@@ -595,8 +642,23 @@ namespace SteamBoat.Controllers
 
         bool GapGood(int myGap, Item myItem)
         {
-            // 30 - 50
-            if (myItem.StartingPrice <= 50)
+            // 30 - 60
+            if (myItem.StartingPrice <= 60)
+            {
+                if (myGap >= 25)
+                {
+                    return true;
+
+                }
+                else
+                {
+                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
+                    return false;
+
+                }
+            }
+            // 60 - 85
+            if (myItem.StartingPrice <= 85)
             {
                 if (myGap >= 24)
                 {
@@ -610,8 +672,8 @@ namespace SteamBoat.Controllers
 
                 }
             }
-            // 51 - 75
-            if (myItem.StartingPrice <= 75)
+            // 85 - 250
+            if (myItem.StartingPrice <= 250)
             {
                 if (myGap >= 23)
                 {
@@ -625,24 +687,9 @@ namespace SteamBoat.Controllers
 
                 }
             }
-            // 76 - 250
-            if (myItem.StartingPrice <= 250)
-            {
-                if (myGap >= 22)
-                {
-                    return true;
-
-                }
-                else
-                {
-                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
-                    return false;
-
-                }
-            }
 
             // 250 +
-            if (myGap >= 20)
+            if (myGap >= 21)
             {
                 return true;
 
@@ -660,7 +707,7 @@ namespace SteamBoat.Controllers
 
         bool PriceGood(Item myItem)
         {
-            if (myItem.StartingPrice > 30 && myItem.StartingPrice < 800)
+            if (myItem.StartingPrice > 50 && myItem.StartingPrice < 900)
             {
                 return true;
             }
@@ -1304,6 +1351,16 @@ namespace SteamBoat.Controllers
         private bool ItemExists(string id)
         {
             return _context.Items.Any(e => e.hash_name_key == id);
+        }
+        private int increaseintbypercent(int number, int percent) 
+        {
+            double dnumber = (double)number;
+            var increase = dnumber / 100;
+            double bigger = (double)number + (increase * percent);
+            int returnint = (int)bigger;
+
+
+            return returnint;
         }
 
         void RandomWait(int min100, int max100)
