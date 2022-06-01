@@ -114,7 +114,7 @@ namespace SteamBoat.Controllers
         public IActionResult Index()
         {
 
-          //  var x = increaseintbypercent(123, 10);
+            //  var x = increaseintbypercent(123, 10);
 
             //return RedirectToAction("Hour24");
             //   var allItems = _context.Items.ToList();
@@ -125,6 +125,13 @@ namespace SteamBoat.Controllers
 
             // 
             //   _context.SaveChanges();
+
+            //var lastsale = _context.Transactions.Where(w => w.Game_hash_name_key == "524220-2B (Foil Trading Card)" && w.type.ToString() == "-").OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
+            //var lastbuy = _context.Transactions.Where(w => w.Game_hash_name_key == "524220-2B (Foil Trading Card)" && w.type.ToString() == "+").OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
+            //var likelybuy = _context.Transactions.Where(t => t.DateT <= lastsale.DateT.AddDays(-6) && t.type.ToString() == "+" && t.Game_hash_name_key == "524220-2B (Foil Trading Card)").OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
+            //var buys = _context.Transactions.Where(t => t.DateT < DateTime.Now.AddDays(-6) && t.type.ToString() == "+" && t.Game_hash_name_key == "524220-2B (Foil Trading Card)").OrderByDescending(o => o.DateT).ToList();
+
+
 
             return View();
 
@@ -239,6 +246,9 @@ namespace SteamBoat.Controllers
                 foreach (var saleItem in myItems)
                 {
                     var lastsale = _context.Transactions.Where(w => w.Game_hash_name_key == saleItem.hash_name_key && w.type.ToString() == "-").OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
+                    var lastbuy = _context.Transactions.Where(w => w.Game_hash_name_key == saleItem.hash_name_key && w.type.ToString() == "+").OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
+                    saleItem.minSellPrice = 0;
+                    
                     if (lastsale != null)
                     {
                         // var x = lastsale.DateT.AddDays(-6);
@@ -247,17 +257,31 @@ namespace SteamBoat.Controllers
                         var likelybuy = _context.Transactions.Where(t => t.DateT <= lastsale.DateT.AddDays(-6) && t.type.ToString() == "+" && t.Game_hash_name_key == lastsale.Game_hash_name_key).OrderByDescending(o => o.DateT).Take(1).SingleOrDefault();
                         saleItem.LastSellInt = lastsale.int_sale_price_after_fees;
                         saleItem.LastSaleBuyPrice = likelybuy.int_sale_price_after_fees;
-                        Console.WriteLine(saleItem.hash_name_key + " buy = " + likelybuy.DateT.ToShortDateString() + " " + likelybuy.sale_price_after_fees.ToString() + " sale = " + lastsale.DateT.ToShortDateString() + " " + lastsale.sale_price_after_fees);
-                        int minSell = increaseintbypercent(likelybuy.int_sale_price_after_fees, 14);
-                        saleItem.minSellPrice = minSell;
+                    }
 
-                    }
-                    else 
+                    if (lastbuy != null) 
                     {
-                        saleItem.minSellPrice = 0;
+
+                        
+                        int minSell = increaseintbypercent(lastbuy.int_sale_price_after_fees, 14);
+                        saleItem.minSellPrice = minSell;
+                        saleItem.LastBuyPrice = lastbuy.int_sale_price_after_fees;
+
+                        Console.WriteLine(saleItem.hash_name_key + "last buy = " + lastbuy.DateT.ToShortDateString() + " " + lastbuy.sale_price_after_fees.ToString() + "min sale = " + saleItem.minSellPrice.ToString());
                     }
+                   
+                    
+
+
+
+
                 }
             }
+
+
+
+
+
             _context.SaveChanges();
 
 
@@ -645,7 +669,7 @@ namespace SteamBoat.Controllers
             // 30 - 60
             if (myItem.StartingPrice <= 60)
             {
-                if (myGap >= 25)
+                if (myGap >= 23)
                 {
                     return true;
 
@@ -660,7 +684,7 @@ namespace SteamBoat.Controllers
             // 60 - 85
             if (myItem.StartingPrice <= 85)
             {
-                if (myGap >= 24)
+                if (myGap >= 22)
                 {
                     return true;
 
@@ -675,7 +699,7 @@ namespace SteamBoat.Controllers
             // 85 - 250
             if (myItem.StartingPrice <= 250)
             {
-                if (myGap >= 23)
+                if (myGap >= 21)
                 {
                     return true;
 
@@ -689,7 +713,7 @@ namespace SteamBoat.Controllers
             }
 
             // 250 +
-            if (myGap >= 21)
+            if (myGap >= 20)
             {
                 return true;
 

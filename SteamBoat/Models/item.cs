@@ -148,7 +148,8 @@ namespace SteamBoat.Models
         
         //likely buy price of last sale
         public int LastSaleBuyPrice { get; set; }
-        
+        public int LastBuyPrice { get; set; }
+
         public bool onHoldPriceToolLow { get; set; }
         public bool onHold { get; set; }
         

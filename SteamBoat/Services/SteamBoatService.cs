@@ -1299,7 +1299,7 @@ namespace SteamBoat.Services
                
                 var driver = new ChromeDriver(options);
                 driver.Url = MarketUrl;
-                RandomWait(30, 40);
+                RandomWait(10, 20);
                 var filter_button = driver.FindElement(By.Id("filter_tag_show"));
                 RandomWait(10, 20);
                 filter_button.Click();
@@ -1323,12 +1323,14 @@ namespace SteamBoat.Services
                             int cnt = 0;
                             foreach (var singleItem in items)
                             {
-                                Console.Write("ITEM: " + cnt.ToString());
+                                
                                 if (singleItem.Displayed == true)
                                 {
                                     var myClass = singleItem.GetAttribute("class");
                                     if (!myClass.Contains("disabled"))
                                     {
+                                        Console.WriteLine("----------------------------------");
+                                        Console.WriteLine("ITEM: " + cnt.ToString());
                                         RandomWait(1, 5);
                                         singleItem.Click();
                                         RandomWait(5, 15);
@@ -1337,7 +1339,24 @@ namespace SteamBoat.Services
                                         var url = myLink.GetAttribute("href");
                                         string[] split = url.Split("/");
                                         var hash = HttpUtility.UrlDecode(split[split.Length - 1]);
-                                        if (hash != lastgame)
+
+                                        var myItem = _context.Items.Where(h => h.hash_name_key == hash).SingleOrDefault();
+
+                                        if (myItem == null)
+                                        {
+                                            throw new Exception("CaNT FIND ITEM  : " + hash);
+                                        }
+                                        Console.WriteLine(myItem.Name);
+                                        //use 900 so zero is never used in error
+                                        var myprice = "9.0";
+                                        //We have an item
+                                        myprice = myItem.IdealSellStr;
+                                        if (!myItem.onHoldPriceToolLow && !myItem.onHold)
+                                        {
+
+                                            //price is good enough to make profit
+
+                                            if (hash != lastgame)
                                         {
                                             //makes only on eof every game put up for sale a day
                                             //not same as last game
@@ -1345,7 +1364,7 @@ namespace SteamBoat.Services
                                         
                                         var sellbuttons = driver.FindElements(By.ClassName("item_market_action_button_green"));
                                         RandomWait(10, 20);
-                                        Console.WriteLine(sellbuttons.Count().ToString() + " Sell buttons");
+                                        //Console.WriteLine(sellbuttons.Count().ToString() + " Sell buttons");
                                         foreach (var butt in sellbuttons)
                                         {
                                             if (butt.Displayed == true)
@@ -1361,20 +1380,8 @@ namespace SteamBoat.Services
                                         RandomWait(3, 10);
                                         price_box.SendKeys(Keys.Backspace);
                                         RandomWait(1, 6);
-                                        //use 900 so zero is never used in error
-                                        var myprice = "9.0";
-                                        var myItem = _context.Items.Where(h => h.hash_name_key == hash).SingleOrDefault();
-
-                                        if (myItem == null)
-                                        {
-                                            throw new Exception("CaNT FIND ITEM  : " + hash);
-                                        }
-
-                                        //We have an item
-                                        myprice = myItem.IdealSellStr;
-                                            if (!myItem.onHoldPriceToolLow)
-                                            {
-                                                //price is good enough to make profit
+                             
+                               
                                                 if (myItem.IdealSellInt != 100 && myItem.IdealSellInt != 200 && myItem.IdealSellInt != 300 && myItem.IdealSellInt != 400 && myItem.IdealSellInt != 500 && myItem.IdealSellInt != 600 && myItem.IdealSellInt != 700 && myItem.IdealSellInt != 900)
                                                 {
                                                     if (myItem.IdealSellInt > 900 || myItem.IdealSellStr.Substring(1, 1) != ".")
@@ -1478,16 +1485,17 @@ namespace SteamBoat.Services
                                             }
                                             else 
                                             {
-                                                //item is flagged as being on hold becasue the
-                                                //calculated sel price would result in a loss
-                                                Console.WriteLine("ITEM PRICE TOO LOW ON HOLD : " + myItem.hash_name_key);
+                                                //this game asme as last one
+                                                Console.WriteLine("Multiple game ignored for today");
+
                                             }
                                         }
                                         else
                                         {
-                                            //this game asme as last one
-                                            Console.WriteLine("multiple game ignored for today");
-
+                                            //item is flagged as being on hold becasue the
+                                            //calculated sel price would result in a loss
+                                            Console.WriteLine("ITEM PRICE TOO LOW ON HOLD : " + myItem.hash_name_key);
+                                            
                                         }
 
                                         cnt++;
