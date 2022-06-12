@@ -985,9 +985,12 @@ namespace SteamBoat.Controllers
         public IActionResult UpdateActivity()
         {
 
-            _SteamBoatService.ActivityUpdateAll(true);
+            _SteamBoatService.ActivityUpdateAll2();
             return Content("OK");
         }
+
+
+
 
         public IActionResult agility()
         {

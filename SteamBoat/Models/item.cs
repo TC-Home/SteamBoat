@@ -152,9 +152,22 @@ namespace SteamBoat.Models
 
         public bool onHoldPriceToolLow { get; set; }
         public bool onHold { get; set; }
-        
 
+        public int Tip_Price1 { get; set; }
+        public int Tip_Price2 { get; set; }
+        public int Tip_Price3 { get; set; }
+        public int Tip_Price4 { get; set; }
+        public int Tip_Price5 { get; set; }
+        public int Tip_Price6 { get; set; }
+        public int Tip_Price7 { get; set; }
+        public int Tip_Price8 { get; set; }
+        public int Tip_Price9 { get; set; }
 
+        public int Tip_Price10 { get; set; }
+
+        public int Pred_Tip_Price { get; set; }
+
+        public int SharkMaxPrice { get; set; }
 
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }

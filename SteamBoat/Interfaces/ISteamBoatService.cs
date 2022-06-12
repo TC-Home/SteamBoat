@@ -28,9 +28,16 @@ namespace SteamBoat.Interfaces
 
         public string ActivityUpdateSingle(Item item);
 
+
+        public string ActivityUpdateAll2();
+
+        public string ActivityUpdateSingle2(Item item);
+
         public int poundtocent(string pound, float? exrate = 1f);
 
-        public string UpdateBidPrice(string hash_name, int bid_quant, int bid_price, string bid_price_in_pound);
+        public int centtopenny(int cent, float? exrate = 0.81f);
+
+       public string UpdateBidPrice(string hash_name, int bid_quant, int bid_price, string bid_price_in_pound);
    
 
         public string Clean(string Dirty);
@@ -66,6 +73,9 @@ namespace SteamBoat.Interfaces
         public string PostBids();
 
         public string PostSells();
+
+        public int increaseintbypercent(int number, int percent);
+        
 
     }
 }

@@ -360,15 +360,228 @@ namespace SteamBoat.Services
             return "OK";
         }
 
+
+        public string ActivityUpdateAll2()
+        {
+            //do then all
+            //check all items have an activity url
+            //var allitems = _context.Items.ToList();
+            var allitems = _context.Items.Where(w => w.Activity > 30 && w.StartingPrice > 75).ToList();
+            var tot = allitems.Count();
+            var cnt = 0;
+           // var allitems = _context.Items.Where(w => w.Tip_Price10 == 0 && w.Activity > 20).ToList();
+
+            //foreach (Item item in allitems.Where(w => w.ActivityHistory == 0).ToList())
+            foreach (var item in allitems.ToList())
+                {
+                cnt++;
+                Console.WriteLine(cnt + " of " + tot);
+                //update activity for single item
+                ActivityUpdateSingle2(item);
+                    _context.SaveChanges();
+
+                }
+                Console.WriteLine("FINISHED");
+               
+           
+
+            return "OK";
+
+        }
+
+        public string ActivityUpdateSingle2(Item item)
+        {
+
+            var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour72);
+
+            for (int i = 0; i < 5; i++)
+            {
+                if (itemGrab.Fail == true)
+                {
+                    RandomWait(10, 100);
+                    //try getting a fresh one
+                    Console.WriteLine("Trying = " + i);
+                    itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Fresh);
+                }
+            }
+            if (itemGrab.HTML == null)
+            {
+         
+            }
+            string trades = getBetween(itemGrab.HTML, "var line1=", "g_timePriceHistoryEarliest");
+
+            trades = trades.Replace("]];", "");
+            trades = trades.Replace("[[", "");
+            string[] myArray = trades.Split("],[");
+
+            var myModRecs = new List<Activityrec>();
+            foreach (var myArrayRec in myArray)
+            {
+                LoadArraytoMod(myArrayRec, myModRecs);
+            }
+
+            //CREATE A GROUPED ONJ
+            var myModRecsGroupedBYDATE = new List<Activityrec>();
+
+            var today = DateTime.Now.Date;
+            List<float> steps = new List<float>();
+            //ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY 
+            int Activity = 0;
+
+            for (int i = 0; i < 30; i++)
+            {
+                int high = 0;
+                int low = 10000000;
+                var searchdate = today.AddDays(i * -1);
+                var Allthisday = myModRecs.Where(w => w.myDate == searchdate).ToList();
+                var Cdate = new DateTime();
+                float CAmount = 0f;
+                float CNumber = 0f;
+                Cdate = searchdate;
+                if (Allthisday.Count > 0)
+                {
+                  
+                    foreach (var PartDate in Allthisday)
+                    {
+
+                        //STEPS THROUGH ALL ON SAME DAY
+                        //CAMOUNT & myAmount IS number of items
+                        //Cnumber & PartDate.myNumber is price!
+
+                        if (PartDate.myNumber > high) 
+                        {
+                            high = (int)PartDate.myNumber;
+                        }
+
+                        if (PartDate.myNumber < low)
+                        {
+                            low = (int)PartDate.myNumber;
+                        }
+
+                        CAmount = CAmount + PartDate.myAmount;
+                        CNumber = CNumber + (PartDate.myNumber * PartDate.myAmount);
+                        Activity = Activity + (int)PartDate.myAmount;
+                        Console.WriteLine(Cdate.ToShortDateString() + " Number Sold " + PartDate.myAmount + " Price" + PartDate.myNumber + " high = " + high + " low = " + low);
+                    }
+                    //Ave for day
+                    CNumber = CNumber / CAmount;
+
+                }
+                myModRecsGroupedBYDATE.Add(new Activityrec() { myDate = Cdate, myAmount = CAmount, myNumber = CNumber, myHigh = high, myLow = low }) ;
+            }
+            //RECS ARE GROUPED BY DATE
+            //TRY GROUP BY BATCH
+
+            // BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH
+
+            //RECS ARE GROUPED BY DATE
+            //TRY GROUP BY BATCH
+
+            var batchsize = 3;
+            var batchcnt = 0;
+
+            float BNumber = 0f;
+            int batchssofar = 0;
+
+            int batch_days_with_sales = 0;
+            var thisbatch = new Activityrec();
+            var batchedRecs = new List<Activitybatch>();
+            var AlldaysGrouped = myModRecs.ToList();
+            int maxbatchsize = 0;
+            float unitsize = 0;
+
+            for (int y = 0; y < 30; y++)
+            {
+                batchcnt++;
+                var searchdate = today.AddDays(y * -1);
+                var singleday = myModRecsGroupedBYDATE.Where(w => w.myDate == searchdate).SingleOrDefault();
+
+                if (singleday != null)
+                {
+                    if (singleday.myNumber != 0)
+                    {
+                        BNumber = BNumber + singleday.myHigh;
+                        batch_days_with_sales++;
+                    }
+
+                }
+                if (batchcnt == batchsize)
+                {
+                    batchssofar++;
+                    if (BNumber > 0 && batch_days_with_sales > 0)
+                    {
+                        batchedRecs.Add(new Activitybatch() { BatchNumber = batchssofar, BatchAV = (int)(BNumber / batch_days_with_sales) });
+                    }
+                    else
+                    {
+                        batchedRecs.Add(new Activitybatch() { BatchNumber = batchssofar, BatchAV = 0 });
+
+                    }
+                    if ((int)(BNumber / batch_days_with_sales) > maxbatchsize)
+                    {
+                        maxbatchsize = (int)(BNumber / batch_days_with_sales);
+                    }
+                    batchcnt = 0;
+                    BNumber = 0;
+                    batch_days_with_sales = 0;
+                }
+            }
+
+            if (maxbatchsize == 0)
+            {
+                item.Activity = 0;
+                item.Tip_Price1 = 0;
+                item.Tip_Price2 = 0;
+                item.Tip_Price3 = 0;
+                item.Tip_Price4 = 0;
+                item.Tip_Price5 = 0;
+                item.Tip_Price6 = 0;
+                item.Tip_Price7 = 0;
+                item.Tip_Price8 = 0;
+                item.Tip_Price9 = 0;
+                item.Tip_Price10 = 0;
+
+            }
+            else
+            {
+                unitsize = 100 / (float)maxbatchsize;
+                unitsize = 1;
+
+                item.Activity = Activity;
+                item.Tip_Price1 = centtopenny((int)(batchedRecs[9].BatchAV * unitsize));
+                item.Tip_Price2 = centtopenny((int)(batchedRecs[8].BatchAV * unitsize));
+                item.Tip_Price3 = centtopenny((int)(batchedRecs[7].BatchAV * unitsize));
+                item.Tip_Price4 = centtopenny((int)(batchedRecs[6].BatchAV * unitsize));
+                item.Tip_Price5 = centtopenny((int)(batchedRecs[5].BatchAV * unitsize));
+                item.Tip_Price6 = centtopenny((int)(batchedRecs[4].BatchAV * unitsize));
+                item.Tip_Price7 = centtopenny((int)(batchedRecs[3].BatchAV * unitsize)); 
+                item.Tip_Price8 = centtopenny((int)(batchedRecs[2].BatchAV * unitsize));
+                item.Tip_Price9 = centtopenny((int)(batchedRecs[1].BatchAV * unitsize));
+                item.Tip_Price10 = centtopenny((int)(batchedRecs[0].BatchAV * unitsize));
+
+                if (item.Tip_Price10 > 0 && item.Tip_Price9 > 0 && item.Tip_Price8 > 0)
+                {
+                    item.Pred_Tip_Price = (int)((((((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price9))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price8))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price7)))) / 3) + (float)(item.Tip_Price10)) / 2);
+                    item.SharkMaxPrice = increaseintbypercent(item.Pred_Tip_Price, -21);
+                }
+                
+            }
+
+            return "OK";
+        }
+
+
         public string ActivityUpdateAll(bool usedayofweek) 
         {
             //loops through all items to update activity stats
 
             // use day of week, updates a seventh of the total items based on day of week
-            
-            //check all items have an activity url
-            var allitems = _context.Items.ToList();
 
+            //check all items have an activity url
+            //var allitems = _context.Items.ToList();
+            var allitems = _context.Items.Where(w=> w.Activity > 30 && w.StartingPrice > 75).ToList();
+            var tot2 = allitems.Count();
+            var cnt2 = 0;
 
             if (usedayofweek == false)
             {
@@ -377,7 +590,8 @@ namespace SteamBoat.Services
                 //foreach (Item item in allitems.Where(w => w.ActivityHistory == 0).ToList())
                 foreach (var item in allitems.ToList())
                 {
-
+                    cnt2++;
+                    Console.WriteLine(cnt2 + " of " + tot2);
                     //update activity for single item
                     ActivityUpdateSingle(item);
                     _context.SaveChanges();
@@ -417,7 +631,11 @@ namespace SteamBoat.Services
         public string ActivityUpdateSingle(Item item) 
         {
 
-            var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour24);
+            var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.AnyCached);
+            if (itemGrab.HTML == null) 
+            {
+            
+            }
             string trades = getBetween(itemGrab.HTML, "var line1=", "g_timePriceHistoryEarliest");
 
             trades = trades.Replace("]];", "");
@@ -449,7 +667,7 @@ namespace SteamBoat.Services
                 Cdate = searchdate;
                 if (Allthisday.Count > 0)
                 {
-                    
+     
                     foreach (var PartDate in Allthisday)
                     {
                         //STEPS THROUGH ALL ON SAME DAY
@@ -635,12 +853,16 @@ namespace SteamBoat.Services
           //  }
 
             var myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
-            if (myStats.Fail == true) 
-            {
-                //try again:
-                myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
+       
 
-            }
+                if (myStats.Fail == true)
+                {
+                  
+                    //try again:
+                    myStats = _ContentGrabberService.GrabMeJSON(myItem.ItemStatsURL, freshness, 0);
+
+                }
+            
 
             if (myStats.JSON == null) 
             {
@@ -909,6 +1131,10 @@ namespace SteamBoat.Services
 
         public string getBetween(string strSource, string strStart, string strEnd)
         {
+            if (strSource == null) 
+            {
+                return "";
+            }
             if (strSource.Contains(strStart) && strSource.Contains(strEnd))
             {
                 int Start, End;
@@ -938,6 +1164,14 @@ namespace SteamBoat.Services
 
 
 
+
+        }
+
+        public int centtopenny(int cent, float? exrate = 0.81f)
+        {
+            float? penny = (float)cent;
+            penny = penny * exrate;
+            return Convert.ToInt32(penny);
 
         }
 
@@ -1546,7 +1780,17 @@ namespace SteamBoat.Services
             return "OK";
         }
 
+        public int increaseintbypercent(int number, int percent)
+        {
+            //works for decrease too
+            double dnumber = (double)number;
+            var increase = dnumber / 100;
+            double bigger = (double)number + (increase * percent);
+            int returnint = (int)bigger;
 
+
+            return returnint;
+        }
 
         public string PostBids() 
         
@@ -1699,5 +1943,7 @@ namespace SteamBoat.Services
             //Put the thread to sleep
             System.Threading.Thread.Sleep(seconds);
         }
+
+      
     }
 }

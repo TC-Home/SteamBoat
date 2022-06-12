@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>aspnet-SteamBoat-FAC8F9E0-0736-4ACF-AA23-B590E350926A</UserSecretsId>
     <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="5.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.12" />
@@ -16,24 +14,22 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.ML" Version="1.7.1" />
+    <PackageReference Include="Microsoft.ML.FastTree" Version="1.7.1" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Selenium.Support" Version="4.1.1" />
     <PackageReference Include="Selenium.WebDriver" Version="4.1.1" />
     <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="101.0.4951.4100" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\ContentGrabber\ContentGrabber.DataAccess\ContentGrabber.DataAccess.csproj" />
     <ProjectReference Include="..\..\ContentGrabber\ContentGrabber.Grabber\ContentGrabber.Grabber.csproj" />
     <ProjectReference Include="..\..\ContentGrabber\ContentGrabber.Utils\ContentGrabber.Utils.csproj" />
-
   </ItemGroup>
-
   <ItemGroup>
     <Folder Include="downloads\Selling\" />
     <Folder Include="wwwroot\datatables\js\" />
     <Folder Include="wwwroot\itemimages\" />
   </ItemGroup>
-
 </Project>

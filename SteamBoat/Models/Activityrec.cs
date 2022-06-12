@@ -10,7 +10,10 @@ namespace SteamBoat.Models
         public DateTime myDate { get; set; }
         public float myNumber { get; set; }
         public float myAmount { get; set; }
-    
+
+        public int  myHigh { get; set; }
+        public int myLow { get; set; }
+
     }
 
 
