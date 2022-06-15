@@ -169,6 +169,8 @@ namespace SteamBoat.Models
 
         public int SharkMaxPrice { get; set; }
 
+        public DateTime lastSharked { get; set; }
+
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }
         [ForeignKey("Game_hash_name_key")]

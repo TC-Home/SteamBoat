@@ -68,7 +68,42 @@ namespace SteamBoat.Controllers
             return View(myLHfs);
         }
 
-        public IActionResult x()
+        public IActionResult shark() 
+        {
+            var sharkitems = _context.Items.Where(w => w.Activity > 80 && w.StartingPrice > 75).OrderBy(o => o.lastSharked).ToList();
+            foreach (var sharkitem in sharkitems) 
+            {
+            
+                _SteamBoatService.UpdateStatsforItem(sharkitem, Freshness.Hour1);
+                _SteamBoatService.ActivityUpdateSingle2(sharkitem);
+                sharkitem.lastSharked = DateTime.Now;
+                Console.WriteLine(sharkitem.ItemPageURL + " price = " + sharkitem.StartingPrice + " shark = " + sharkitem.SharkMaxPrice);
+                _context.SaveChanges();
+                if (sharkitem.SharkMaxPrice > sharkitem.StartingPrice) 
+                { 
+                
+                }
+            }
+            
+            return Content("OK");
+        }
+
+        public IActionResult randsharkdates()
+        {
+            var items = _context.Items.ToList();
+
+            foreach (var sitem in items) 
+            {
+                Random rnd = new Random();
+                int addtime = rnd.Next(1, 300);
+                sitem.lastSharked = DateTime.Now.AddMinutes(addtime);
+            
+            }
+            _context.SaveChanges();
+            return Content("OK");
+
+        }
+            public IActionResult x()
         {
 
             for (int i = 200; i < 3000; i = i + 500)

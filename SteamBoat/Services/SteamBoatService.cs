@@ -283,7 +283,7 @@ namespace SteamBoat.Services
                 //myNewItem.Activity = tradescount;
 
                 //NEW ACTIVITY
-                ActivityUpdateSingle(myNewItem);
+                ActivityUpdateSingle2(myNewItem);
 
 
                 myNewItem.ItemStatsURL = "https://steamcommunity.com/market/itemordershistogram?country=GB&language=english&currency=2&item_nameid=" + item_nameid + "&two_factor=0&norender=1";
@@ -342,7 +342,10 @@ namespace SteamBoat.Services
         public string LHFandGaps(Freshness freshness)
         {
         
-            var myItems = _context.Items.Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
+            //var myItems = _context.Items.Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
+            var myItems = _context.Items.Where(w => w.Activity > 20 && w.StartingPrice > 75).Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
+            
+
             int tot = myItems.Count();
             int cnt = 0;
 
@@ -366,7 +369,8 @@ namespace SteamBoat.Services
             //do then all
             //check all items have an activity url
             //var allitems = _context.Items.ToList();
-            var allitems = _context.Items.Where(w => w.Activity > 30 && w.StartingPrice > 75).ToList();
+            //var allitems = _context.Items.Where(w => w.Activity > 20 && w.StartingPrice > 75).ToList();
+            var allitems = _context.Items.Where(w => w.hash_name_key == "1091500-Aldecaldos (Foil)").ToList();
             var tot = allitems.Count();
             var cnt = 0;
            // var allitems = _context.Items.Where(w => w.Tip_Price10 == 0 && w.Activity > 20).ToList();
@@ -392,7 +396,7 @@ namespace SteamBoat.Services
         public string ActivityUpdateSingle2(Item item)
         {
 
-            var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour72);
+            var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour12);
 
             for (int i = 0; i < 5; i++)
             {
@@ -401,7 +405,7 @@ namespace SteamBoat.Services
                     RandomWait(10, 100);
                     //try getting a fresh one
                     Console.WriteLine("Trying = " + i);
-                    itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Fresh);
+                    itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour1);
                 }
             }
             if (itemGrab.HTML == null)
@@ -418,6 +422,43 @@ namespace SteamBoat.Services
             foreach (var myArrayRec in myArray)
             {
                 LoadArraytoMod(myArrayRec, myModRecs);
+            }
+
+            int cnt = 0;
+            float lastval = 0;
+            //check for freak spikes
+            foreach (var modrec in myModRecs) 
+            {
+                //dont kick in filter until 5 values looked at
+                if (cnt > 10) 
+                {
+                    if (lastval > 0)
+                    {
+
+
+                        float change = ((modrec.myNumber - lastval) / Math.Abs(lastval)) * 100;
+                        if (change < -250f || change > 250f)
+                        {
+
+                            Console.WriteLine("*ROGUE VALUE REMOVED* " + modrec.myNumber + " | " + lastval);
+                            modrec.myNumber = lastval;
+                            lastval = 0;
+                        }
+                        else
+                        {
+                            Console.Write(".");
+                        }
+
+                    }
+                    else 
+                    {
+                        lastval = modrec.myNumber;
+                    }
+                    
+                    
+                }
+                
+            cnt++;
             }
 
             //CREATE A GROUPED ONJ
@@ -461,7 +502,7 @@ namespace SteamBoat.Services
                         CAmount = CAmount + PartDate.myAmount;
                         CNumber = CNumber + (PartDate.myNumber * PartDate.myAmount);
                         Activity = Activity + (int)PartDate.myAmount;
-                        Console.WriteLine(Cdate.ToShortDateString() + " Number Sold " + PartDate.myAmount + " Price" + PartDate.myNumber + " high = " + high + " low = " + low);
+                       // Console.WriteLine(Cdate.ToShortDateString() + " Number Sold " + PartDate.myAmount + " Price" + PartDate.myNumber + " high = " + high + " low = " + low);
                     }
                     //Ave for day
                     CNumber = CNumber / CAmount;
