@@ -67,27 +67,37 @@ namespace SteamBoat.Controllers
             var myLHfs = _SteamBoatService.GetLHFS();
             return View(myLHfs);
         }
-
+        public IActionResult sharktest() 
+        {
+            var sharkme = _context.Items.Where(i => i.hash_name_key == "Rusteratu Hoodie").SingleOrDefault();
+            return Content(sharkSingleItem(sharkme));
+        }
         public IActionResult shark() 
         {
             var sharkitems = _context.Items.Where(w => w.Activity > 80 && w.StartingPrice > 75).OrderBy(o => o.lastSharked).ToList();
             foreach (var sharkitem in sharkitems) 
             {
-            
-                _SteamBoatService.UpdateStatsforItem(sharkitem, Freshness.Hour1);
-                _SteamBoatService.ActivityUpdateSingle2(sharkitem);
-                sharkitem.lastSharked = DateTime.Now;
-                Console.WriteLine(sharkitem.ItemPageURL + " price = " + sharkitem.StartingPrice + " shark = " + sharkitem.SharkMaxPrice);
-                _context.SaveChanges();
-                if (sharkitem.SharkMaxPrice > sharkitem.StartingPrice) 
-                { 
-                
-                }
+                sharkSingleItem(sharkitem);
+
+
             }
             
             return Content("OK");
         }
 
+        public string sharkSingleItem(Item sharkitem)
+        {
+            _SteamBoatService.UpdateStatsforItem(sharkitem, Freshness.Hour1);
+            _SteamBoatService.ActivityUpdateSingle2(sharkitem);
+            sharkitem.lastSharked = DateTime.Now;
+            Console.WriteLine(sharkitem.ItemPageURL + " price = " + sharkitem.StartingPrice + " shark = " + sharkitem.SharkMaxPrice);
+            _context.SaveChanges();
+            if (sharkitem.SharkMaxPrice > sharkitem.StartingPrice)
+            {
+                return "Shark";
+            }
+            return "NOShark";
+        }
         public IActionResult randsharkdates()
         {
             var items = _context.Items.ToList();

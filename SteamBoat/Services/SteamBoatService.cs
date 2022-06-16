@@ -437,7 +437,7 @@ namespace SteamBoat.Services
 
 
                         float change = ((modrec.myNumber - lastval) / Math.Abs(lastval)) * 100;
-                        if (change < -250f || change > 250f)
+                        if (change < -150f || change > 150f)
                         {
 
                             Console.WriteLine("*ROGUE VALUE REMOVED* " + modrec.myNumber + " | " + lastval);
@@ -446,6 +446,7 @@ namespace SteamBoat.Services
                         }
                         else
                         {
+                            lastval = modrec.myNumber;
                             Console.Write(".");
                         }
 
