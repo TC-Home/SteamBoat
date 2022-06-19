@@ -236,6 +236,10 @@ namespace SteamBoat.Services
                 if (fullitemURL != null)
                 {
                     itemGrab = _ContentGrabberService.GrabMe(fullitemURL, Freshness.AnyCached);
+                    if (itemGrab.Fail == true) 
+                    {
+                        itemGrab = _ContentGrabberService.GrabMe(fullitemURL, Freshness.Fresh);
+                    }
                 }
                 else
                 {
@@ -283,7 +287,7 @@ namespace SteamBoat.Services
                 //myNewItem.Activity = tradescount;
 
                 //NEW ACTIVITY
-                ActivityUpdateSingle2(myNewItem);
+                ActivityUpdateSingle(myNewItem);
 
 
                 myNewItem.ItemStatsURL = "https://steamcommunity.com/market/itemordershistogram?country=GB&language=english&currency=2&item_nameid=" + item_nameid + "&two_factor=0&norender=1";
@@ -339,12 +343,27 @@ namespace SteamBoat.Services
             }
             return result;
         }
-        public string LHFandGaps(Freshness freshness)
+        public string LHFandGaps(Freshness freshness, string game, string excludeGame)
         {
-        
-            //var myItems = _context.Items.Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
-            var myItems = _context.Items.Where(w => w.Activity > 20 && w.StartingPrice > 75).Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
-            
+
+            var myItems = new List<Item>();
+
+            if (game != null) 
+            {
+                myItems = _context.Items.Where(w => w.Game == game).Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
+            }
+            else
+            {
+                 myItems = _context.Items.Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
+            }
+
+            //var myItems = _context.Items.Where(w => w.Activity > 20 && w.StartingPrice > 75).Include("ItemsForSale").OrderByDescending(o => o.StartingPrice).ToList();
+
+            if (excludeGame != null) 
+            {
+                myItems = myItems.Where(x => x.Game != excludeGame).ToList();
+            }
+
 
             int tot = myItems.Count();
             int cnt = 0;
@@ -364,7 +383,7 @@ namespace SteamBoat.Services
         }
 
 
-        public string ActivityUpdateAll2()
+        public string ActivityUpdateAll()
         {
             //do then all
             //check all items have an activity url
@@ -381,7 +400,7 @@ namespace SteamBoat.Services
                 cnt++;
                 Console.WriteLine(cnt + " of " + tot);
                 //update activity for single item
-                ActivityUpdateSingle2(item);
+                ActivityUpdateSingle(item);
                     _context.SaveChanges();
 
                 }
@@ -393,7 +412,7 @@ namespace SteamBoat.Services
 
         }
 
-        public string ActivityUpdateSingle2(Item item)
+        public string ActivityUpdateSingle(Item item)
         {
 
             var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.Hour12);
@@ -582,210 +601,6 @@ namespace SteamBoat.Services
                 item.Tip_Price8 = 0;
                 item.Tip_Price9 = 0;
                 item.Tip_Price10 = 0;
-
-            }
-            else
-            {
-                unitsize = 100 / (float)maxbatchsize;
-                unitsize = 1;
-
-                item.Activity = Activity;
-                item.Tip_Price1 = centtopenny((int)(batchedRecs[9].BatchAV * unitsize));
-                item.Tip_Price2 = centtopenny((int)(batchedRecs[8].BatchAV * unitsize));
-                item.Tip_Price3 = centtopenny((int)(batchedRecs[7].BatchAV * unitsize));
-                item.Tip_Price4 = centtopenny((int)(batchedRecs[6].BatchAV * unitsize));
-                item.Tip_Price5 = centtopenny((int)(batchedRecs[5].BatchAV * unitsize));
-                item.Tip_Price6 = centtopenny((int)(batchedRecs[4].BatchAV * unitsize));
-                item.Tip_Price7 = centtopenny((int)(batchedRecs[3].BatchAV * unitsize)); 
-                item.Tip_Price8 = centtopenny((int)(batchedRecs[2].BatchAV * unitsize));
-                item.Tip_Price9 = centtopenny((int)(batchedRecs[1].BatchAV * unitsize));
-                item.Tip_Price10 = centtopenny((int)(batchedRecs[0].BatchAV * unitsize));
-
-                if (item.Tip_Price10 > 0 && item.Tip_Price9 > 0 && item.Tip_Price8 > 0)
-                {
-                    item.Pred_Tip_Price = (int)((((((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price9))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price8))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price7)))) / 3) + (float)(item.Tip_Price10)) / 2);
-                    item.SharkMaxPrice = increaseintbypercent(item.Pred_Tip_Price, -21);
-                }
-                
-            }
-
-            return "OK";
-        }
-
-
-        public string ActivityUpdateAll(bool usedayofweek) 
-        {
-            //loops through all items to update activity stats
-
-            // use day of week, updates a seventh of the total items based on day of week
-
-            //check all items have an activity url
-            //var allitems = _context.Items.ToList();
-            var allitems = _context.Items.Where(w=> w.Activity > 30 && w.StartingPrice > 75).ToList();
-            var tot2 = allitems.Count();
-            var cnt2 = 0;
-
-            if (usedayofweek == false)
-            {
-                //do then all
-
-                //foreach (Item item in allitems.Where(w => w.ActivityHistory == 0).ToList())
-                foreach (var item in allitems.ToList())
-                {
-                    cnt2++;
-                    Console.WriteLine(cnt2 + " of " + tot2);
-                    //update activity for single item
-                    ActivityUpdateSingle(item);
-                    _context.SaveChanges();
-
-                }
-            }
-            else 
-            {
-                //do a seveth of the total to avoid spamming
-                //the seventh selectred are based on the day of tyhe week
-                int dayNumber = (int)DateTime.Now.DayOfWeek;
-                int cnt = 0;
-                int mod = 7;
-                int tot = 0;
-
-                foreach (var my7item in allitems.Skip(dayNumber))
-                {
-
-                    if (cnt % mod == 0)
-                    {
-                       ActivityUpdateSingle(my7item);
-                        tot = tot + 1;
-                    }
-                    cnt = cnt + 1;
-                    
-
- _context.SaveChanges();
-                }
-                Console.WriteLine("FINISHED");
-                Console.WriteLine("Used day of week filtering. did " + tot.ToString());
-            }
-           
-            return "OK";
-        
-        }
-
-        public string ActivityUpdateSingle(Item item) 
-        {
-
-            var itemGrab = _ContentGrabberService.GrabMe(item.ItemPageURL, Freshness.AnyCached);
-            if (itemGrab.HTML == null) 
-            {
-            
-            }
-            string trades = getBetween(itemGrab.HTML, "var line1=", "g_timePriceHistoryEarliest");
-
-            trades = trades.Replace("]];", "");
-            trades = trades.Replace("[[", "");
-            string[] myArray = trades.Split("],[");
-
-            var myModRecs = new List<Activityrec>();
-            foreach (var myArrayRec in myArray)
-            {
-                LoadArraytoMod(myArrayRec, myModRecs);
-            }
-
-            //CREATE A GROUPED ONJ
-            var myModRecsGroupedBYDATE = new List<Activityrec>();
-
-            var today = DateTime.Now.Date;
-            List<float> steps = new List<float>();
-            //ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY ACTIVITY 
-            int Activity = 0;
-
-            for (int i = 0; i < 30; i++)
-            {
-
-                var searchdate = today.AddDays(i * -1);
-                var Allthisday = myModRecs.Where(w => w.myDate == searchdate).ToList();
-                var Cdate = new DateTime();
-                float CAmount = 0f;
-                float CNumber = 0f;
-                Cdate = searchdate;
-                if (Allthisday.Count > 0)
-                {
-     
-                    foreach (var PartDate in Allthisday)
-                    {
-                        //STEPS THROUGH ALL ON SAME DAY
-                        
-                        CAmount = CAmount + PartDate.myAmount;
-                        CNumber = CNumber + (PartDate.myNumber * PartDate.myAmount);
-                        Activity = Activity + (int)PartDate.myAmount;
-                        Console.WriteLine(Cdate.ToShortDateString() + " " + PartDate.myAmount + " " + PartDate.myNumber);
-                    }
-                    //Ave for day
-                    CNumber = CNumber / CAmount;
-
-                }
-                myModRecsGroupedBYDATE.Add(new Activityrec() { myDate = Cdate, myAmount = CAmount, myNumber = CNumber });
-            }
-            //RECS ARE GROUPED BY DATE
-            //TRY GROUP BY BATCH
-
-            // BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH BATCH
-
-            //RECS ARE GROUPED BY DATE
-            //TRY GROUP BY BATCH
-
-            var batchsize = 3;
-            var batchcnt = 0;
-          
-            float BNumber = 0f;
-            int batchssofar = 0;
-
-            int batch_days_with_sales = 0;
-            var thisbatch = new Activityrec();
-            var batchedRecs = new List<Activitybatch>();
-            var AlldaysGrouped = myModRecs.ToList();
-            int maxbatchsize = 0;
-            float unitsize = 0;
-
-            for (int y = 0; y < 30; y++)
-            {
-                batchcnt++;
-                var searchdate = today.AddDays(y * -1);
-                var singleday = myModRecsGroupedBYDATE.Where(w => w.myDate == searchdate).SingleOrDefault();
-
-                if (singleday != null)
-                {
-                    if (singleday.myNumber != 0)
-                    {
-                        BNumber = BNumber + singleday.myNumber;
-                        batch_days_with_sales++;
-                    }
-
-                }
-                if (batchcnt == batchsize)
-                {
-                    batchssofar++;
-                    if (BNumber > 0 && batch_days_with_sales > 0)
-                    {
-                        batchedRecs.Add(new Activitybatch() { BatchNumber = batchssofar, BatchAV = (int)(BNumber / batch_days_with_sales) });
-                    }
-                    else 
-                    {
-                        batchedRecs.Add(new Activitybatch() { BatchNumber = batchssofar, BatchAV = 0 });
-
-                    }
-                    if ((int)(BNumber / batch_days_with_sales) > maxbatchsize) 
-                    {
-                        maxbatchsize = (int)(BNumber / batch_days_with_sales);
-                    }
-                    batchcnt = 0;
-                    BNumber = 0;
-                    batch_days_with_sales = 0;
-                }
-            }
-
-            if (maxbatchsize == 0)
-            { 
-                item.Activity = 0;
                 item.AH1 = 0;
                 item.AH2 = 0;
                 item.AH3 = 0;
@@ -801,9 +616,20 @@ namespace SteamBoat.Services
             else
             {
                 unitsize = 100 / (float)maxbatchsize;
+                //unitsize = 1;
 
-              
                 item.Activity = Activity;
+                item.Tip_Price1 = centtopenny((int)(batchedRecs[9].BatchAV));
+                item.Tip_Price2 = centtopenny((int)(batchedRecs[8].BatchAV));
+                item.Tip_Price3 = centtopenny((int)(batchedRecs[7].BatchAV));
+                item.Tip_Price4 = centtopenny((int)(batchedRecs[6].BatchAV));
+                item.Tip_Price5 = centtopenny((int)(batchedRecs[5].BatchAV));
+                item.Tip_Price6 = centtopenny((int)(batchedRecs[4].BatchAV));
+                item.Tip_Price7 = centtopenny((int)(batchedRecs[3].BatchAV)); 
+                item.Tip_Price8 = centtopenny((int)(batchedRecs[2].BatchAV));
+                item.Tip_Price9 = centtopenny((int)(batchedRecs[1].BatchAV));
+                item.Tip_Price10 = centtopenny((int)(batchedRecs[0].BatchAV));
+
                 item.AH1 = (int)(batchedRecs[9].BatchAV * unitsize);
                 item.AH2 = (int)(batchedRecs[8].BatchAV * unitsize);
                 item.AH3 = (int)(batchedRecs[7].BatchAV * unitsize);
@@ -814,10 +640,21 @@ namespace SteamBoat.Services
                 item.AH8 = (int)(batchedRecs[2].BatchAV * unitsize);
                 item.AH9 = (int)(batchedRecs[1].BatchAV * unitsize);
                 item.AH10 = (int)(batchedRecs[0].BatchAV * unitsize);
+
+
+                if (item.Tip_Price10 > 0 && item.Tip_Price9 > 0 && item.Tip_Price8 > 0)
+                {
+                    item.Pred_Tip_Price = (int)((((((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price9))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price8))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price7)))) / 3) + (float)(item.Tip_Price10)) / 2);
+                    item.SharkMaxPrice = increaseintbypercent(item.Pred_Tip_Price, -21);
+                }
+                
             }
 
             return "OK";
         }
+
+
+  
 
         void LoadArraytoMod(string myArrayRec, List<Activityrec> myModRecs)
         {
@@ -1156,11 +993,18 @@ namespace SteamBoat.Services
             return "OK";
         }
 
-        public List<Item> GetLHFS(int lowest = 10) 
+        public List<Item> GetLHFS(string game, int lowest = 10) 
         {
-
-            var myLHFs = _context.Items.Where(w => w.Fruit > lowest).Where(a => a.Activity > 15).OrderByDescending(o => o.Fruit).ToList();
-            return myLHFs;
+            if (game == null)
+            {
+                var myLHFs = _context.Items.Where(w => w.Fruit > lowest).Where(a => a.Activity > 15).OrderByDescending(o => o.Fruit).ToList();
+                return myLHFs;
+            }
+            else 
+            {
+                var myLHFs = _context.Items.Where(w => w.Fruit > lowest).Where(a => a.Activity > 15).OrderByDescending(o => o.Fruit).Where(g => g.Game == game).ToList();
+                return myLHFs;
+            }
         
         }
         public List<Item> GetGaps(int lowest = 10)
@@ -1556,12 +1400,19 @@ namespace SteamBoat.Services
             options.AddArgument("--disable-blink-features=AutomationControlled");
             List<string> markets = new List<string>
             {
-                "https://steamcommunity.com/profiles/76561198024474411/inventory#753",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#232090",
+
+
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#431240",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#753",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#252490",
                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#227300",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#250820",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#431240"
-                
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#269210",
+                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#232090",
+                      "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#227300",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#232090",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#447820",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#244850",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#270880"
 
 
             };
@@ -1658,9 +1509,9 @@ namespace SteamBoat.Services
                                         RandomWait(1, 6);
                              
                                
-                                                if (myItem.IdealSellInt != 100 && myItem.IdealSellInt != 200 && myItem.IdealSellInt != 300 && myItem.IdealSellInt != 400 && myItem.IdealSellInt != 500 && myItem.IdealSellInt != 600 && myItem.IdealSellInt != 700 && myItem.IdealSellInt != 900)
+                                                if (myItem.IdealSellInt != 100 && myItem.IdealSellInt != 200 && myItem.IdealSellInt != 300 && myItem.IdealSellInt != 400 && myItem.IdealSellInt != 500 && myItem.IdealSellInt != 600 && myItem.IdealSellInt != 700 && myItem.IdealSellInt != 900 && myItem.IdealSellInt != 1000)
                                                 {
-                                                    if (myItem.IdealSellInt > 900 || myItem.IdealSellStr.Substring(1, 1) != ".")
+                                                    if (myItem.IdealSellInt > 2000 )
                                                     {
 
                                                         //somethings not right
@@ -1834,7 +1685,7 @@ namespace SteamBoat.Services
             return returnint;
         }
 
-        public string PostBids() 
+        public string PostBids(string game, string excludeGame, bool justCancells = false) 
         
         {
             var options = new ChromeOptions();
@@ -1844,6 +1695,22 @@ namespace SteamBoat.Services
 
             //var allItems = _context.Items.Where(g => g.Game.Contains("outer")).ToList();
             var allItems = _context.Items.ToList();
+
+            if (game != null) 
+            {
+                allItems = allItems.Where(g => g.Game == game).ToList();
+            }
+
+            if (excludeGame != null) 
+            {
+                allItems = allItems.Where(g => g.Game != excludeGame).ToList();
+            }
+
+            if (justCancells) 
+            {
+
+                allItems = allItems.Where(g => g.CancelCurrentBid == true ).ToList();
+            }
 
             foreach (var myItem in allItems)
             {

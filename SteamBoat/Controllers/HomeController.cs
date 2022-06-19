@@ -54,17 +54,23 @@ namespace SteamBoat.Controllers
             return View("/views/home/default.cshtml", res);
         }
 
-        public IActionResult LHF(bool grab = false)
+        public IActionResult LHF(string game, string excludeGame, bool grab = false)
         {
             if (grab)
             {
-                string res = _SteamBoatService.LHFandGaps(Freshness.Fresh);
+                string res = _SteamBoatService.LHFandGaps(Freshness.Fresh, game, excludeGame);
             }
             else
             {
-                string res = _SteamBoatService.LHFandGaps(Freshness.AnyCached);
+                string res = _SteamBoatService.LHFandGaps(Freshness.AnyCached, game, excludeGame);
             }
-            var myLHfs = _SteamBoatService.GetLHFS();
+
+            var myLHfs = _SteamBoatService.GetLHFS(game);
+            if (excludeGame != null) 
+            {
+                myLHfs = myLHfs.Where(x => x.Game != excludeGame).ToList();
+            }
+
             return View(myLHfs);
         }
         public IActionResult sharktest() 
@@ -88,7 +94,7 @@ namespace SteamBoat.Controllers
         public string sharkSingleItem(Item sharkitem)
         {
             _SteamBoatService.UpdateStatsforItem(sharkitem, Freshness.Hour1);
-            _SteamBoatService.ActivityUpdateSingle2(sharkitem);
+            _SteamBoatService.ActivityUpdateSingle(sharkitem);
             sharkitem.lastSharked = DateTime.Now;
             Console.WriteLine(sharkitem.ItemPageURL + " price = " + sharkitem.StartingPrice + " shark = " + sharkitem.SharkMaxPrice);
             _context.SaveChanges();
@@ -98,6 +104,16 @@ namespace SteamBoat.Controllers
             }
             return "NOShark";
         }
+
+        public IActionResult updatestatssingleitem() 
+        {
+            var myitem = _context.Items.Where(x => x.hash_name_key == "Bats").SingleOrDefault();
+            _SteamBoatService.ActivityUpdateSingle(myitem);
+            _context.SaveChanges();
+            return Content("OK");
+        }
+       
+        
         public IActionResult randsharkdates()
         {
             var items = _context.Items.ToList();
@@ -116,7 +132,7 @@ namespace SteamBoat.Controllers
             public IActionResult x()
         {
 
-            for (int i = 200; i < 3000; i = i + 500)
+            for (int i = 200; i < 3000; i = i + 100)
             {
                 Console.WriteLine(i);
                 var feed = new FeederUrl();
@@ -148,7 +164,7 @@ namespace SteamBoat.Controllers
         {
             if (grab)
             {
-                string res = _SteamBoatService.LHFandGaps(Freshness.Fresh);
+                string res = _SteamBoatService.LHFandGaps(Freshness.Fresh, null, null);
             }
 
             var myGaps = _SteamBoatService.GetGaps();
@@ -183,9 +199,9 @@ namespace SteamBoat.Controllers
 
         }
 
-        public IActionResult PostBids()
+        public IActionResult PostBids(string game, string excludeGame, bool justCancells = false)
         {
-            _SteamBoatService.PostBids();
+            _SteamBoatService.PostBids(game, excludeGame, justCancells);
 
             return Content("OK");
         }
@@ -711,8 +727,38 @@ namespace SteamBoat.Controllers
 
         bool GapGood(int myGap, Item myItem)
         {
-            // 30 - 60
-            if (myItem.StartingPrice <= 60)
+            // 30 - 70
+            if (myItem.StartingPrice <= 70)
+            {
+                if (myGap >= 25)
+                {
+                    return true;
+
+                }
+                else
+                {
+                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
+                    return false;
+
+                }
+            }
+            // 70 - 100
+            if (myItem.StartingPrice <= 100)
+            {
+                if (myGap >= 24)
+                {
+                    return true;
+
+                }
+                else
+                {
+                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
+                    return false;
+
+                }
+            }
+            // 100 - 250
+            if (myItem.StartingPrice <= 250)
             {
                 if (myGap >= 23)
                 {
@@ -726,39 +772,9 @@ namespace SteamBoat.Controllers
 
                 }
             }
-            // 60 - 85
-            if (myItem.StartingPrice <= 85)
-            {
-                if (myGap >= 22)
-                {
-                    return true;
-
-                }
-                else
-                {
-                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
-                    return false;
-
-                }
-            }
-            // 85 - 250
-            if (myItem.StartingPrice <= 250)
-            {
-                if (myGap >= 21)
-                {
-                    return true;
-
-                }
-                else
-                {
-                    myItem.IdealBid_Notes += " GAP TOO SMALL | ";
-                    return false;
-
-                }
-            }
 
             // 250 +
-            if (myGap >= 20)
+            if (myGap >= 22)
             {
                 return true;
 
@@ -978,10 +994,37 @@ namespace SteamBoat.Controllers
                 combined = combined + arrayofitems2.ToString(); }
             catch
             {
-                Console.WriteLine("only one page of sell listings (less than 100)");
+                Console.WriteLine("222only one page of sell listings (less than 100)");
 
             }
+            //THIS is optiopnal third page
+            try
+            {
+                var fileloc3 = Path.Combine(Directory.GetCurrentDirectory(), "downloads//Selling", "download3.json");
+                string myHistory3 = System.IO.File.ReadAllText(fileloc3);
+                var myJSOObject3 = JObject.Parse(myHistory3);
+                var arrayofitems3 = myJSOObject3.SelectToken("results_html");
+                combined = combined + arrayofitems3.ToString();
+            }
+            catch
+            {
+                Console.WriteLine("333only one page of sell listings (less than 100)");
 
+            }
+            //THIS is optiopnal fourth page
+            try
+            {
+                var fileloc4 = Path.Combine(Directory.GetCurrentDirectory(), "downloads//Selling", "download4.json");
+                string myHistory4 = System.IO.File.ReadAllText(fileloc4);
+                var myJSOObject4 = JObject.Parse(myHistory4);
+                var arrayofitems4 = myJSOObject4.SelectToken("results_html");
+                combined = combined + arrayofitems4.ToString();
+            }
+            catch
+            {
+                Console.WriteLine("444only one page of sell listings (less than 100)");
+
+            }
 
 
 
@@ -1030,7 +1073,7 @@ namespace SteamBoat.Controllers
         public IActionResult UpdateActivity()
         {
 
-            _SteamBoatService.ActivityUpdateAll2();
+            _SteamBoatService.ActivityUpdateAll();
             return Content("OK");
         }
 

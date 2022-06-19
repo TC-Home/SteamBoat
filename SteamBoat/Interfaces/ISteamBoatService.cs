@@ -18,20 +18,15 @@ namespace SteamBoat.Interfaces
 
         public missionReportVM CreateUpdateItemPage(string hash_name, string itemUrl, missionReportVM MissionReport, int sellprice, string imageurl, string fullitemURL = null);
 
-        public string LHFandGaps(Freshness freshness);
+        public string LHFandGaps(Freshness freshness, string game, string excludeGame);
 
-        public List<Item> GetLHFS(int lowest = 10);
+        public List<Item> GetLHFS(string game, int lowest = 10);
 
         public List<Item> GetGaps(int lowest = 10);
 
-        public string ActivityUpdateAll(bool usedayofweek = false);
+        public string ActivityUpdateAll();
 
         public string ActivityUpdateSingle(Item item);
-
-
-        public string ActivityUpdateAll2();
-
-        public string ActivityUpdateSingle2(Item item);
 
         public int poundtocent(string pound, float? exrate = 1f);
 
@@ -70,7 +65,7 @@ namespace SteamBoat.Interfaces
 
         public string UpdateStatsforItem(Item myItem, Freshness freshness);
 
-        public string PostBids();
+        public string PostBids(string game, string excludeGame, bool justCancells = false);
 
         public string PostSells();
 
