@@ -730,7 +730,7 @@ namespace SteamBoat.Controllers
             // 30 - 70
             if (myItem.StartingPrice <= 70)
             {
-                if (myGap >= 25)
+                if (myGap >= 26)
                 {
                     return true;
 
@@ -745,7 +745,7 @@ namespace SteamBoat.Controllers
             // 70 - 100
             if (myItem.StartingPrice <= 100)
             {
-                if (myGap >= 24)
+                if (myGap >= 25)
                 {
                     return true;
 
@@ -760,7 +760,7 @@ namespace SteamBoat.Controllers
             // 100 - 250
             if (myItem.StartingPrice <= 250)
             {
-                if (myGap >= 23)
+                if (myGap >= 24)
                 {
                     return true;
 
@@ -774,7 +774,7 @@ namespace SteamBoat.Controllers
             }
 
             // 250 +
-            if (myGap >= 22)
+            if (myGap >= 23)
             {
                 return true;
 
