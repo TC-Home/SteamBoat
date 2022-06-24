@@ -1368,10 +1368,18 @@ namespace SteamBoat.Services
             Game = Game.Replace(" Trading Card", "");
             Game = Game.Replace(" (Trading Card)", "");
             Game = Game.Replace(": Definitive Edition", "");
-            
 
 
-            var item = _context.Items.Where(i => i.Name == Item).Where(g => g.Game.Contains(Game)).SingleOrDefault();
+            var item = new Item();
+            try
+            {
+                 item = _context.Items.Where(i => i.Name == Item).Where(g => g.Game.Contains(Game)).SingleOrDefault();
+            }
+            catch {
+
+                Console.WriteLine(">>>>>>>>>>>>> ZOMBIE CARD ERROR! TWo cards almost same, just choose first one");
+                item = _context.Items.Where(i => i.Name == Item).Where(g => g.Game.Contains(Game)).Take(1).Single();
+            }
             if (item != null) 
             {
                 return item.hash_name_key;

@@ -54,6 +54,28 @@ namespace SteamBoat.Controllers
             return View("/views/home/default.cshtml", res);
         }
 
+        public IActionResult Cancelbidsbyprice(int price = 200) 
+        {
+
+            var bids = _context.Items.Where(b => b.bid_price > price).ToList();
+            foreach (var mybid in bids) 
+            {
+                
+                mybid.bid_price = 0;
+                mybid.bid_price_in_pound = "";
+                mybid.bid_quant = 0;
+                mybid.IdealBidInt = 0;
+                mybid.IdealBidStr = "";
+                mybid.CancelCurrentBid = true;
+                mybid.IdealBid_Notes = "cancelled by Cancelbidsbyprice";
+
+            }
+            _context.SaveChanges();
+            _SteamBoatService.PostBids(null, null, true);
+            return Content("OK");
+        
+        }
+
         public IActionResult LHF(string game, string excludeGame, bool grab = false)
         {
             if (grab)
@@ -792,7 +814,7 @@ namespace SteamBoat.Controllers
 
         bool PriceGood(Item myItem)
         {
-            if (myItem.StartingPrice > 50 && myItem.StartingPrice < 900)
+            if (myItem.StartingPrice > 65 && myItem.StartingPrice < 400)
             {
                 return true;
             }
