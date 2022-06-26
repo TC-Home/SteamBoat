@@ -18,25 +18,27 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Configuration;
 
 namespace SteamBoat.Controllers
 {
     public class HomeController : Controller
     {
         private readonly SteamBoatContext _context;
-
+        private readonly IConfiguration _config;
         private readonly ILogger<HomeController> _logger;
         private readonly IContentGrabberDataService _ContentGrabberDataService;
         private readonly IContentGrabberService _ContentGrabberService;
         private readonly ISteamBoatService _SteamBoatService;
 
-        public HomeController(SteamBoatContext context, ISteamBoatService SteamBoatService, ILogger<HomeController> logger, IContentGrabberDataService ContentGrabberDataService, IContentGrabberService ContentGrabberService)
+        public HomeController(IConfiguration Configuration, SteamBoatContext context, ISteamBoatService SteamBoatService, ILogger<HomeController> logger, IContentGrabberDataService ContentGrabberDataService, IContentGrabberService ContentGrabberService)
         {
             _logger = logger;
             _ContentGrabberDataService = ContentGrabberDataService;
             _ContentGrabberService = ContentGrabberService;
             _SteamBoatService = SteamBoatService;
             _context = context;
+            _config = Configuration;
         }
 
         public IActionResult Domission(int id = 1004, bool grab = true, bool flip_order = false)
@@ -93,16 +95,18 @@ namespace SteamBoat.Controllers
                 myLHfs = myLHfs.Where(x => x.Game != excludeGame).ToList();
             }
 
+            myLHfs = myLHfs.Where(w => w.ThrottledOUT == false).ToList();
+
             return View(myLHfs);
         }
         public IActionResult sharktest() 
         {
-            var sharkme = _context.Items.Where(i => i.hash_name_key == "Rusteratu Hoodie").SingleOrDefault();
+            var sharkme = _context.Items.Where(i => i.hash_name_key == "Battle-Scarred AKS47").SingleOrDefault();
             return Content(sharkSingleItem(sharkme));
         }
         public IActionResult shark() 
         {
-            var sharkitems = _context.Items.Where(w => w.Activity > 80 && w.StartingPrice > 75).OrderBy(o => o.lastSharked).ToList();
+            var sharkitems = _context.Items.Where(w => w.StartingPrice < _config.GetValue<int>("SteamBoat:MinStartingPrice") || w.StartingPrice > _config.GetValue<int>("SteamBoat:MaxStartingPrice")).OrderBy(o => o.lastSharked).ToList();
             foreach (var sharkitem in sharkitems) 
             {
                 sharkSingleItem(sharkitem);
@@ -344,9 +348,19 @@ namespace SteamBoat.Controllers
 
                     if (lastbuy != null) 
                     {
-
-                        
-                        int minSell = increaseintbypercent(lastbuy.int_sale_price_after_fees, 14);
+                        //set min sale price
+                        //let cheaper items go for a small loss
+                        int minSell = 0;
+                        if (saleItem.StartingPrice < 75)
+                        {
+                            //let cheper items go for a small loss -75p
+                            minSell = increaseintbypercent(lastbuy.int_sale_price_after_fees, 7);
+                        }
+                        else 
+                        {
+                            //this should ensure a profit or break even on 75p + items
+                            minSell = increaseintbypercent(lastbuy.int_sale_price_after_fees, 13);
+                        }
                         saleItem.minSellPrice = minSell;
                         saleItem.LastBuyPrice = lastbuy.int_sale_price_after_fees;
 
@@ -814,7 +828,9 @@ namespace SteamBoat.Controllers
 
         bool PriceGood(Item myItem)
         {
-            if (myItem.StartingPrice > 65 && myItem.StartingPrice < 400)
+
+            //foreach (var myOUTitem in myItems.Where(w => w.StartingPrice < _config.GetValue<int>("SteamBoat:MinStartingPrice") || w.StartingPrice > _config.GetValue<int>("SteamBoat:MaxStartingPrice")).ToList())
+                if (myItem.StartingPrice > _config.GetValue<int>("SteamBoat:MinStartingPrice") && myItem.StartingPrice < _config.GetValue<int>("SteamBoat:MaxStartingPrice"))
             {
                 return true;
             }

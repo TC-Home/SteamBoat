@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220624205637_ThrottledOUT")]
+    partial class ThrottledOUT
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -211,12 +213,6 @@ namespace SteamBoat.Migrations
 
                     b.Property<int>("Tip_Price9")
                         .HasColumnType("int");
-
-                    b.Property<int>("Tip_PriceAVG")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("allowshark")
-                        .HasColumnType("bit");
 
                     b.Property<int>("bid1Price")
                         .HasColumnType("int");

@@ -14,6 +14,8 @@ namespace SteamBoat.Models
         {
             this.ItemsForSale = new HashSet<ItemForSale>();
             this.Transactions = new HashSet<Transaction>();
+            this.ThrottledOUT = false;
+                this.allowshark = false;
         }
 
         [Key]
@@ -165,9 +167,15 @@ namespace SteamBoat.Models
 
         public int Tip_Price10 { get; set; }
 
+        public int Tip_PriceAVG { get; set; }
+
         public int Pred_Tip_Price { get; set; }
 
         public int SharkMaxPrice { get; set; }
+
+        public bool ThrottledOUT { get; set; }
+
+        public bool allowshark { get; set; }
 
         public DateTime lastSharked { get; set; }
 

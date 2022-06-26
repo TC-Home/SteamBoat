@@ -20,6 +20,7 @@ using System.IO;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
 using System.Web;
+using Microsoft.Extensions.Configuration;
 
 namespace SteamBoat.Services
 {
@@ -30,13 +31,15 @@ namespace SteamBoat.Services
         private readonly IContentGrabberDataService _ContentGrabberDataService;
         private readonly IContentGrabberService _ContentGrabberService;
         private readonly SteamBoatContext _context;
+        private readonly IConfiguration _config;
 
-        public SteamBoatService(SteamBoatContext context, IContentGrabberDataService ContentGrabberDataService, IContentGrabberService ContentGrabberService)
+        public SteamBoatService(IConfiguration Configuration, SteamBoatContext context, IContentGrabberDataService ContentGrabberDataService, IContentGrabberService ContentGrabberService)
         {
             
             _ContentGrabberDataService = ContentGrabberDataService;
             _ContentGrabberService = ContentGrabberService;
             _context = context;
+            _config = Configuration;
 
         }
 
@@ -364,6 +367,34 @@ namespace SteamBoat.Services
                 myItems = myItems.Where(x => x.Game != excludeGame).ToList();
             }
 
+            //Throttle?
+
+            //first unthrottle everything
+            var unthrottitems = _context.Items.ToList();
+            foreach (var item in unthrottitems) 
+            {
+                item.ThrottledOUT = false;
+
+            }
+            _context.SaveChanges();
+
+            if (_config.GetValue<bool>("SteamBoat:Throttle")) 
+            {
+
+              //  var filteredCount = myItems.Where(w => w.StartingPrice < _config.GetValue<int>("SteamBoat:MinStartingPrice") || w.StartingPrice > _config.GetValue<int>("SteamBoat:MaxStartingPrice")).ToList();
+                foreach (var myOUTitem in myItems.Where(w => w.StartingPrice < _config.GetValue<int>("SteamBoat:MinStartingPrice") || w.StartingPrice > _config.GetValue<int>("SteamBoat:MaxStartingPrice")).ToList())
+                {
+
+                    myOUTitem.ThrottledOUT = true;
+                
+                }
+                _context.SaveChanges();
+
+            }
+
+          //  var filteredCount2 = myItems.Where(w => w.StartingPrice < _config.GetValue<int>("SteamBoat:MinStartingPrice") || w.StartingPrice > _config.GetValue<int>("SteamBoat:MaxStartingPrice")).ToList();
+            myItems = myItems.Where(w => w.ThrottledOUT == false).ToList();
+
 
             int tot = myItems.Count();
             int cnt = 0;
@@ -387,9 +418,13 @@ namespace SteamBoat.Services
         {
             //do then all
             //check all items have an activity url
-            //var allitems = _context.Items.ToList();
+            var allitems = _context.Items.ToList();
             //var allitems = _context.Items.Where(w => w.Activity > 20 && w.StartingPrice > 75).ToList();
-            var allitems = _context.Items.Where(w => w.hash_name_key == "1091500-Aldecaldos (Foil)").ToList();
+
+            allitems = allitems.Where(w => w.StartingPrice < _config.GetValue<int>("SteamBoat:MinStartingPrice") || w.StartingPrice > _config.GetValue<int>("SteamBoat:MaxStartingPrice")).ToList();
+
+            //var allitems = _context.Items.Where(w => w.hash_name_key == "1088850-Lady Hellbender (Foil)").ToList();
+
             var tot = allitems.Count();
             var cnt = 0;
            // var allitems = _context.Items.Where(w => w.Tip_Price10 == 0 && w.Activity > 20).ToList();
@@ -641,13 +676,50 @@ namespace SteamBoat.Services
                 item.AH9 = (int)(batchedRecs[1].BatchAV * unitsize);
                 item.AH10 = (int)(batchedRecs[0].BatchAV * unitsize);
 
+                if (item.Tip_Price1 > 0 &&
+                    item.Tip_Price2 > 0 &&
+                    item.Tip_Price3 > 0 &&
+                    item.Tip_Price4 > 0 &&
+                    item.Tip_Price5 > 0 &&
+                    item.Tip_Price6 > 0 &&
+                    item.Tip_Price7 > 0 &&
+                    item.Tip_Price8 > 0 &&
+                    item.Tip_Price9 > 0 &&
+                    item.Tip_Price10 > 0)
 
-                if (item.Tip_Price10 > 0 && item.Tip_Price9 > 0 && item.Tip_Price8 > 0)
                 {
+                    //has enough data to shark
+                    //item.allowshark = true;
+                   
                     item.Pred_Tip_Price = (int)((((((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price9))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price8))) + ((float)(item.Tip_Price10) + ((float)(item.Tip_Price10) - (float)(item.Tip_Price7)))) / 3) + (float)(item.Tip_Price10)) / 2);
+
+                    item.Tip_PriceAVG = (item.Tip_Price1 +
+                        item.Tip_Price2 +
+                        item.Tip_Price3 +
+                        item.Tip_Price4 +
+                        item.Tip_Price5 +
+                        item.Tip_Price6 +
+                        item.Tip_Price7 +
+                        item.Tip_Price8 +
+                        item.Tip_Price9 +
+                        item.Tip_Price10) / 10;
+
+                    //use long term avereage but weighted twoards recent prices
+                    item.Pred_Tip_Price = ((item.Pred_Tip_Price * 2) + item.Tip_PriceAVG) / 3;
+
+
+
+
                     item.SharkMaxPrice = increaseintbypercent(item.Pred_Tip_Price, -21);
                 }
+                else 
+                {
+                   // item.allowshark = false;
+                }
+
+
                 
+
             }
 
             return "OK";
@@ -1702,7 +1774,7 @@ namespace SteamBoat.Services
             var driver = new ChromeDriver(options);
 
             //var allItems = _context.Items.Where(g => g.Game.Contains("outer")).ToList();
-            var allItems = _context.Items.ToList();
+            var allItems = _context.Items.Where(w => w.ThrottledOUT == false).OrderByDescending(o => o.CancelCurrentBid).ToList();
 
             if (game != null) 
             {
