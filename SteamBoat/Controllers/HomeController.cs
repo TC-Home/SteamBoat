@@ -475,10 +475,19 @@ namespace SteamBoat.Controllers
                 //check price is not lower than min price
                 if (myPrice < myItem.minSellPrice)
                 {
-                    //will sell at a loss
-                    //so dont sell dont sell at a loss
-                    myItem.onHoldPriceToolLow = true;
-                    Console.WriteLine("Price too low to sell : " + myItem.hash_name_key);
+
+                    if (!_config.GetValue<bool>("SteamBoat:AllowLosses"))
+                    {
+                        //will sell at a loss
+                        //so dont sell dont sell at a loss
+                        myItem.onHoldPriceToolLow = true;
+                        Console.WriteLine("Price too low to sell : " + myItem.hash_name_key);
+                    }
+                    else {
+                        myItem.onHoldPriceToolLow = false;
+                        Console.WriteLine("!!!!!!!!!!!!!!!!!! Selling at a loss : " + myItem.hash_name_key);
+                    }
+
                 } else 
                 {
                     //price good to sell

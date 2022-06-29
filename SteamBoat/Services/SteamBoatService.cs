@@ -1480,20 +1480,23 @@ namespace SteamBoat.Services
             options.AddArgument("--disable-blink-features=AutomationControlled");
             List<string> markets = new List<string>
             {
-
-
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#431240",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#753",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#252490",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#227300",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#269210",
-                 "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#232090",
-                      "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#227300",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#232090",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#447820",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#244850",
-                "https://steamcommunity.com/profiles/76561198024474411/inventory?modal=1&market=1#270880"
-
+                
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#571740",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#274940",
+                
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#431240",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#753",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#252490",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#227300",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#269210",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#232090",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#227300",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#232090",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#447820",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#244850",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#270880",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#322330",
+                "https://steamcommunity.com/profiles/76561198024474411/inventory?market=1#238960"
 
             };
 
@@ -1774,7 +1777,7 @@ namespace SteamBoat.Services
             var driver = new ChromeDriver(options);
 
             //var allItems = _context.Items.Where(g => g.Game.Contains("outer")).ToList();
-            var allItems = _context.Items.Where(w => w.ThrottledOUT == false).OrderByDescending(o => o.CancelCurrentBid).ToList();
+            var allItems = _context.Items.OrderByDescending(o => o.CancelCurrentBid).ToList();
 
             if (game != null) 
             {
