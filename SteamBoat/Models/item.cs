@@ -179,6 +179,24 @@ namespace SteamBoat.Models
 
         public DateTime lastSharked { get; set; }
 
+        //bid check uses various systems to look for uhnuaul high bids
+        //caused by freak price rises or manuipulation
+        public int BidCheck1Score { get; set; }
+
+        public int BidCheck2Score { get; set; }
+
+        public int BidCheck3Score { get; set; }
+
+        public bool BidCheck1Pass { get; set; }
+
+        public bool BidCheck2Pass { get; set; }
+
+        public bool BidCheck3Pass { get; set; }
+
+        public string BidCheckNotes { get; set; }
+
+        public int MyValuation { get; set; }
+
         [ForeignKey("Game_hash_name_key")]
         public ICollection<ItemForSale> ItemsForSale { get; set; }
         [ForeignKey("Game_hash_name_key")]

@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220701171933_bidchecks")]
+    partial class bidchecks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,26 +95,23 @@ namespace SteamBoat.Migrations
                     b.Property<int>("Ave_sell")
                         .HasColumnType("int");
 
-                    b.Property<bool>("BidCheck1Pass")
-                        .HasColumnType("bit");
+                    b.Property<int>("BidCheck1Pass")
+                        .HasColumnType("int");
 
                     b.Property<int>("BidCheck1Score")
                         .HasColumnType("int");
 
-                    b.Property<bool>("BidCheck2Pass")
-                        .HasColumnType("bit");
+                    b.Property<int>("BidCheck2Pass")
+                        .HasColumnType("int");
 
                     b.Property<int>("BidCheck2Score")
                         .HasColumnType("int");
 
-                    b.Property<bool>("BidCheck3Pass")
-                        .HasColumnType("bit");
+                    b.Property<int>("BidCheck3Pass")
+                        .HasColumnType("int");
 
                     b.Property<int>("BidCheck3Score")
                         .HasColumnType("int");
-
-                    b.Property<string>("BidCheckNotes")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("CancelCurrentBid")
                         .HasColumnType("bit");
@@ -179,9 +178,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Median")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MyValuation")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")

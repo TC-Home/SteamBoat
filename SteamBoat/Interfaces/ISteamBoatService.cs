@@ -70,7 +70,8 @@ namespace SteamBoat.Interfaces
         public string PostSells();
 
         public int increaseintbypercent(int number, int percent);
-        
+
+        public Item bidcheck(Item item);
 
     }
 }

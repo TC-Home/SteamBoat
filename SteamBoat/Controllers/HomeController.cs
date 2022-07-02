@@ -55,16 +55,48 @@ namespace SteamBoat.Controllers
             }
             return View("/views/home/default.cshtml", res);
         }
+        public IActionResult Cancelbidsbygame(string game = "Rust")
+        {
 
-        public IActionResult Cancelbidsbyprice(int price = 200) 
+            var games = _context.Items.Where(b => b.Game == game && b.bid_price > 0).ToList();
+            foreach (var mybid in games)
+            {
+
+                //mybid.bid_price = 0;
+                //mybid.bid_price_in_pound = "";
+                mybid.bid_quant = 0;
+                mybid.IdealBidInt = 0;
+                mybid.IdealBidStr = "";
+                mybid.CancelCurrentBid = true;
+                mybid.IdealBid_Notes = "cancelled by Cancelbidsbygame";
+
+            }
+            _context.SaveChanges();
+            _SteamBoatService.PostBids(null, null, true);
+            return Content("OK");
+
+        }
+
+
+        public IActionResult bidcheckall()
+        {
+            var myitems = _context.Items.ToList();
+            foreach (var myItem in myitems)
+            {
+                _SteamBoatService.bidcheck(myItem);
+            }
+            _context.SaveChanges();
+            return Content("OK");
+        }
+            public IActionResult Cancelbidsbyprice(int price = 200) 
         {
 
             var bids = _context.Items.Where(b => b.bid_price > price).ToList();
             foreach (var mybid in bids) 
             {
                 
-                mybid.bid_price = 0;
-                mybid.bid_price_in_pound = "";
+                //mybid.bid_price = 0;
+                //mybid.bid_price_in_pound = "";
                 mybid.bid_quant = 0;
                 mybid.IdealBidInt = 0;
                 mybid.IdealBidStr = "";
@@ -511,6 +543,8 @@ namespace SteamBoat.Controllers
 
         public IActionResult AutoBid()
         {
+
+
             var allItems = _context.Items.ToList();
             foreach (var myItem in allItems)
             {
@@ -553,7 +587,7 @@ namespace SteamBoat.Controllers
                                 //Calculate likely bid to work out GAP
                                 myItem.IdealBidInt = myItem.bid1Price + 1;
                             }
-
+                            myItem.MyValuation = myItem.IdealBidInt;
 
                             var myGap = ((double)myItem.StartingPrice - (double)myItem.IdealBidInt) / (double)myItem.StartingPrice * 100;
                             //is this gap OK
@@ -579,6 +613,7 @@ namespace SteamBoat.Controllers
                                             //room to reduce our top bid
                                             myItem.IdealBid_Notes += " REDUCING IDEAL BID | ";
                                             myItem.IdealBidInt = myItem.bid2Price + 1;
+                                            myItem.MyValuation = myItem.IdealBidInt;
                                         }
                                         else
                                         {
@@ -596,6 +631,7 @@ namespace SteamBoat.Controllers
                                         {
                                             myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
                                             myItem.IdealBidInt++;
+                                            myItem.MyValuation = myItem.IdealBidInt;
                                         }
                                         else
                                         {
@@ -621,6 +657,7 @@ namespace SteamBoat.Controllers
 
                                         myItem.IdealBid_Notes += " RAISING IDEAL BID | ";
                                         myItem.IdealBidInt = myItem.bid1Price + 1;
+                                        myItem.MyValuation = myItem.IdealBidInt;
                                     }
                                     else
                                     {
@@ -628,6 +665,7 @@ namespace SteamBoat.Controllers
                                         //NEW BID
                                         myItem.IdealBid_Notes += " NEW BID | ";
                                         myItem.IdealBidInt = myItem.bid1Price + 1;
+                                        myItem.MyValuation = myItem.IdealBidInt;
                                     }
                                 }
 
@@ -651,7 +689,7 @@ namespace SteamBoat.Controllers
                                 myItem.IdealBidStr = "";
                             }
 
-
+                           
 
                         }
                         else
@@ -686,6 +724,11 @@ namespace SteamBoat.Controllers
                             myItem.IdealBidInt = 0;
                             myItem.IdealBidStr = "";
                         }
+
+
+                        //look for bid anonomlies or shenanagens
+                      //  _SteamBoatService.bidcheck(myItem);
+
 
 
                         //has bid remnanined the same?
@@ -772,10 +815,16 @@ namespace SteamBoat.Controllers
 
         bool GapGood(int myGap, Item myItem)
         {
+            int handicap = 0;
+            if (myItem.Game == "Rust") 
+            {
+                handicap = 2;
+            }
+
             // 30 - 70
             if (myItem.StartingPrice <= 70)
             {
-                if (myGap >= 26)
+                if (myGap >= 26 + handicap)
                 {
                     return true;
 
@@ -790,7 +839,7 @@ namespace SteamBoat.Controllers
             // 70 - 100
             if (myItem.StartingPrice <= 100)
             {
-                if (myGap >= 25)
+                if (myGap >= 25 + handicap)
                 {
                     return true;
 
@@ -805,7 +854,7 @@ namespace SteamBoat.Controllers
             // 100 - 250
             if (myItem.StartingPrice <= 250)
             {
-                if (myGap >= 24)
+                if (myGap >= 24 + handicap)
                 {
                     return true;
 
@@ -819,7 +868,7 @@ namespace SteamBoat.Controllers
             }
 
             // 250 +
-            if (myGap >= 23)
+            if (myGap >= 23 + handicap)
             {
                 return true;
 

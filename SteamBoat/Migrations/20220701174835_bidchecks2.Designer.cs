@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SteamBoat.Data;
 
 namespace SteamBoat.Migrations
 {
     [DbContext(typeof(SteamBoatContext))]
-    partial class SteamBoatContextModelSnapshot : ModelSnapshot
+    [Migration("20220701174835_bidchecks2")]
+    partial class bidchecks2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -111,9 +113,6 @@ namespace SteamBoat.Migrations
                     b.Property<int>("BidCheck3Score")
                         .HasColumnType("int");
 
-                    b.Property<string>("BidCheckNotes")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("CancelCurrentBid")
                         .HasColumnType("bit");
 
@@ -179,9 +178,6 @@ namespace SteamBoat.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Median")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MyValuation")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
